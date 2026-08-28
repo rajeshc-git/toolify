@@ -153,7 +153,7 @@ swift_code = f"""
 import Cocoa
 import WebKit
 
-class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {{
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUIDelegate {{
     var window: NSWindow!
     var webView: WKWebView!
     
@@ -193,6 +193,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {{
         config.preferences.setValue(true, forKey: "developerExtrasEnabled")
         
         webView = WKWebView(frame: .zero, configuration: config)
+        webView.uiDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
         
         let contentView = window.contentView!
@@ -213,6 +214,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {{
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {{
         return true
+    }}
+
+    func webView(_ webView: WKWebView, runOpenPanelWith parameters: WKOpenPanelParameters, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping ([URL]?) -> Void) {{
+        let openPanel = NSOpenPanel()
+        openPanel.allowsMultipleSelection = parameters.allowsMultipleSelection
+        openPanel.canChooseDirectories = parameters.allowsDirectories
+        openPanel.canChooseFiles = true
+        
+        openPanel.beginSheetModal(for: self.window) {{ response in
+            if response == .OK {{
+                completionHandler(openPanel.urls)
+            }} else {{
+                completionHandler(nil)
+            }}
+        }}
     }}
 }}
 
