@@ -255,6 +255,10 @@ if os.path.exists(swift_file_path):
 
 print("✓ Native Swift binary compiled.")
 
+# Ad-hoc sign the app bundle to allow Right-Click 'Open' bypass on web downloads
+print("✓ Ad-hoc signing the App Bundle...")
+subprocess.check_call(["codesign", "--force", "--deep", "--sign", "-", app_dir])
+
 # 7. Create a beautiful styled installer DMG using create-dmg!
 dmg_output = os.path.join(mac_dir, "Toolify.dmg")
 if os.path.exists(dmg_output):
