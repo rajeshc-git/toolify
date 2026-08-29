@@ -13,6 +13,9 @@
 </head>
 
 <body>
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
   <div class="app-layout" id="app">
     <!-- Sidebar Matching Exact Screenshot Order -->
     <aside class="sidebar" id="sidebar">
@@ -28,11 +31,19 @@
             <span class="brand-tagline">Developer toolkit</span>
           </div>
         </a>
-        <button class="icon-btn collapse-btn" id="sidebar-toggle" title="Toggle Sidebar">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+        <div class="sidebar-header-actions">
+          <button class="icon-btn sidebar-close-btn" id="sidebar-close-btn" title="Close Sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+          <button class="icon-btn collapse-btn" id="sidebar-toggle" title="Toggle Sidebar">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Quick Search in Sidebar -->
@@ -694,7 +705,7 @@
             <button class="tab-btn" id="json-tab-converter" style="font-weight: 700;">📝 Converter & Schema Studio</button>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
+          <div class="tool-grid-2col" style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
             
             <!-- Left Workspace Pane -->
             <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -908,7 +919,7 @@
             </div>
           </div>
           <div class="tool-panel" style="padding: 0; background: transparent; border: none; box-shadow: none;">
-            <div style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
+            <div class="tool-grid-2col" style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
               <!-- Left Workspace -->
               <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0;">
                 <div class="drop-zone" id="file-b64-dropzone">
@@ -1547,7 +1558,7 @@
             </div>
           </div>
           
-          <div id="case-outer-grid" style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
+          <div id="case-outer-grid" class="tool-grid-2col" style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
             <!-- Left Panel: Workspace -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
               
@@ -1781,84 +1792,141 @@
           </div>
         </section>
 
-        <!-- 13. Text Diff (Beyond Compare Style) -->
+        <!-- 13. Text Diff (Beyond Compare Live Side-by-Side Suite) -->
         <section id="view-text-diff" class="tool-view">
           <div class="tool-header">
             <div>
               <h1 class="tool-title">Text & Code Diff Checker</h1>
-              <p class="tool-subtitle">Side-by-side real-time diff comparison — Beyond Compare style.</p>
+              <p class="tool-subtitle">Beyond Compare style live real-time side-by-side comparison editor with live syntax & character diffing.</p>
             </div>
             <div class="tool-actions">
               <button class="btn btn-secondary" id="diff-sample-btn">Sample Diff</button>
-              <button class="btn btn-secondary" id="diff-swap-btn">⇄ Swap</button>
+              <button class="btn btn-secondary" id="diff-swap-btn" title="Swap Streams">⇄ Swap</button>
+              <button class="btn btn-secondary" id="diff-merge-l2r" title="Copy Left to Right">Merge L→R</button>
+              <button class="btn btn-secondary" id="diff-merge-r2l" title="Copy Right to Left">Merge R→L</button>
               <button class="btn btn-secondary" id="diff-clear-btn">Clear</button>
             </div>
           </div>
-          <!-- Stats Bar -->
-          <div class="diff-stats-bar" id="diff-stats-bar">
-            <span class="diff-stat-add" id="diff-stat-add">+ 0 Added</span>
-            <span class="diff-stat-del" id="diff-stat-del">− 0 Removed</span>
-            <span class="diff-stat-mod" id="diff-stat-mod">~ 0 Modified</span>
-            <span class="diff-stat-eq" id="diff-stat-eq">= 0 Unchanged</span>
-          </div>
-          <!-- Side-by-Side inputs -->
-          <div class="diff-sbs-inputs" id="diff-sbs-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 12px;">
-            <!-- Left Input Editor Card -->
-            <div class="sb-card" id="diff-card-left" style="gap: 8px; display: flex; flex-direction: column;">
-              <div class="sb-card-header" style="padding-bottom: 4px; margin-bottom: 4px;">
-                <span class="url-card-title">Original (Left)</span>
-                <div class="url-card-actions">
-                  <label class="url-action-icon-btn" title="Load file">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <input type="file" id="diff-file-input-left" accept=".txt,.js,.html,.css,.json,.log" style="display: none;">
-                  </label>
-                  <button class="url-action-icon-btn" id="diff-copy-left" title="Copy Left">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                  </button>
-                  <button class="url-action-icon-btn" id="diff-download-left" title="Download Left as .txt">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                  </button>
-                  <button class="url-action-icon-btn" id="diff-fullscreen-left" title="Fullscreen Left">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-                  </button>
-                </div>
-              </div>
-              <div class="sb-editor-container" style="min-height: 240px; height: 100%;">
-                <div class="sb-line-numbers" id="diff-line-numbers-left">1</div>
-                <textarea id="diff-text-left" class="sb-textarea" spellcheck="false" placeholder="Paste left text here..."></textarea>
+
+          <!-- Beyond Compare Control Toolbar -->
+          <div class="bc-toolbar">
+            <!-- View Mode Switcher -->
+            <div class="bc-toolbar-group">
+              <span class="bc-toolbar-label">View:</span>
+              <div class="bc-btn-group">
+                <button class="bc-toggle-btn active" data-diff-view="split" title="Side-by-Side Split View">Side-by-Side</button>
+                <button class="bc-toggle-btn" data-diff-view="left" title="View Stream A Only">Stream A</button>
+                <button class="bc-toggle-btn" data-diff-view="right" title="View Stream B Only">Stream B</button>
+                <button class="bc-toggle-btn" data-diff-view="unified" title="Unified Patch View">Unified</button>
               </div>
             </div>
 
-            <!-- Right Input Editor Card -->
-            <div class="sb-card" id="diff-card-right" style="gap: 8px; display: flex; flex-direction: column;">
-              <div class="sb-card-header" style="padding-bottom: 4px; margin-bottom: 4px;">
-                <span class="url-card-title">Modified (Right)</span>
-                <div class="url-card-actions">
-                  <label class="url-action-icon-btn" title="Load file">
+            <!-- Filter Switcher -->
+            <div class="bc-toolbar-group">
+              <span class="bc-toolbar-label">Filter:</span>
+              <div class="bc-btn-group">
+                <button class="bc-toggle-btn active" data-diff-filter="all" title="Show All Lines">All Lines</button>
+                <button class="bc-toggle-btn" data-diff-filter="diffs" title="Show Differences Only">Diffs Only</button>
+                <button class="bc-toggle-btn" data-diff-filter="matches" title="Show Matching Lines Only">Matches</button>
+              </div>
+            </div>
+
+            <!-- Difference Navigation -->
+            <div class="bc-toolbar-group">
+              <span class="bc-toolbar-label">Jump:</span>
+              <div class="bc-btn-group">
+                <button class="bc-toggle-btn" id="diff-prev-btn" title="Jump to Previous Difference">▲ Prev Diff</button>
+                <button class="bc-toggle-btn" id="diff-next-btn" title="Jump to Next Difference">▼ Next Diff</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Diff Stats & Match Bar -->
+          <div class="diff-stats-bar" id="diff-stats-bar">
+            <div class="diff-stats-counts">
+              <span class="diff-stat-add" id="diff-stat-add">+ 0 Added</span>
+              <span class="diff-stat-del" id="diff-stat-del">− 0 Removed</span>
+              <span class="diff-stat-mod" id="diff-stat-mod">~ 0 Modified</span>
+              <span class="diff-stat-eq" id="diff-stat-eq">= 0 Unchanged</span>
+            </div>
+            <div class="diff-stats-match">
+              <span class="bc-match-badge bc-match-100" id="diff-stat-match">100% Match</span>
+            </div>
+          </div>
+
+          <!-- Beyond Compare Live Side-by-Side Comparison Workspace -->
+          <div class="bc-sbs-container" id="diff-sbs-container">
+            <!-- Left Stream (Original) -->
+            <div class="bc-editor-card" id="diff-card-left">
+              <div class="bc-editor-header">
+                <div class="bc-editor-title-wrap">
+                  <span class="bc-stream-badge bc-badge-left">A</span>
+                  <span class="bc-editor-title">Stream A (Original)</span>
+                </div>
+                <div class="bc-editor-actions">
+                  <label class="url-action-icon-btn" title="Load local file into Stream A">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <input type="file" id="diff-file-input-right" accept=".txt,.js,.html,.css,.json,.log" style="display: none;">
+                    <input type="file" id="diff-file-input-left" accept=".txt,.js,.ts,.html,.css,.json,.log,.py,.md,.yml,.xml" style="display: none;">
                   </label>
-                  <button class="url-action-icon-btn" id="diff-copy-right" title="Copy Right">
+                  <button class="url-action-icon-btn" id="diff-copy-left" title="Copy Stream A">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                   </button>
-                  <button class="url-action-icon-btn" id="diff-download-right" title="Download Right as .txt">
+                  <button class="url-action-icon-btn" id="diff-download-left" title="Download Stream A (.txt)">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   </button>
-                  <button class="url-action-icon-btn" id="diff-fullscreen-right" title="Fullscreen Right">
+                  <button class="url-action-icon-btn" id="diff-fullscreen-left" title="Maximize Stream A">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
                   </button>
                 </div>
               </div>
-              <div class="sb-editor-container" style="min-height: 240px; height: 100%;">
-                <div class="sb-line-numbers" id="diff-line-numbers-right">1</div>
-                <textarea id="diff-text-right" class="sb-textarea" spellcheck="false" placeholder="Paste right text here..."></textarea>
+              <div class="bc-editor-viewport">
+                <div class="bc-gutter" id="diff-gutter-left"></div>
+                <div class="bc-code-stage">
+                  <div class="bc-backdrop" id="diff-backdrop-left"></div>
+                  <textarea id="diff-text-left" class="bc-live-textarea" spellcheck="false" placeholder="Type or paste original text here..."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Stream (Modified) -->
+            <div class="bc-editor-card" id="diff-card-right">
+              <div class="bc-editor-header">
+                <div class="bc-editor-title-wrap">
+                  <span class="bc-stream-badge bc-badge-right">B</span>
+                  <span class="bc-editor-title">Stream B (Modified)</span>
+                </div>
+                <div class="bc-editor-actions">
+                  <label class="url-action-icon-btn" title="Load local file into Stream B">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <input type="file" id="diff-file-input-right" accept=".txt,.js,.ts,.html,.css,.json,.log,.py,.md,.yml,.xml" style="display: none;">
+                  </label>
+                  <button class="url-action-icon-btn" id="diff-copy-right" title="Copy Stream B">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                  <button class="url-action-icon-btn" id="diff-download-right" title="Download Stream B (.txt)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  </button>
+                  <button class="url-action-icon-btn" id="diff-fullscreen-right" title="Maximize Stream B">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="bc-editor-viewport">
+                <div class="bc-gutter" id="diff-gutter-right"></div>
+                <div class="bc-code-stage">
+                  <div class="bc-backdrop" id="diff-backdrop-right"></div>
+                  <textarea id="diff-text-right" class="bc-live-textarea" spellcheck="false" placeholder="Type or paste modified text here..."></textarea>
+                </div>
               </div>
             </div>
           </div>
-          <!-- Side-by-Side Diff Output -->
-          <div class="diff-sbs-output" id="diff-sbs-output">
-            <div class="diff-sbs-panel diff-sbs-left" id="diff-panel-left"></div>
-            <div class="diff-sbs-panel diff-sbs-right" id="diff-panel-right"></div>
+
+          <!-- Unified Patch View (Toggled when Unified mode active) -->
+          <div class="bc-unified-card" id="diff-card-unified" style="display: none;">
+            <div class="bc-editor-header">
+              <span class="bc-editor-title">Unified Comparison Patch</span>
+            </div>
+            <div class="bc-unified-panel" id="diff-unified-panel"></div>
           </div>
         </section>
 
@@ -1872,7 +1940,7 @@
             </div>
           </div>
           <div class="tool-panel" style="padding: 0; background: transparent; border: none; box-shadow: none;">
-            <div style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
+            <div class="tool-grid-2col" style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
               <!-- Left Workspace -->
               <div class="url-card" style="padding: 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0;">
                 <div class="base-fields-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
@@ -2166,7 +2234,7 @@
             </div>
           </div>
           
-          <div style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
+          <div class="tool-grid-2col" style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
             <!-- Left Panel: Cards -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
               

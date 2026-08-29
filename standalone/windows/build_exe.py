@@ -1,11 +1,12 @@
 import os, re, subprocess, shutil
 
-win_dir = "/Users/abi-mac/Desktop/Utility/standalone/windows"
+win_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.abspath(os.path.join(win_dir, "..", ".."))
+base_dir = os.path.join(root_dir, "web")
 
 print("🚀 Starting Windows Electron App build pipeline...")
 
 # 1. Bundle web assets from web folder
-base_dir = "/Users/abi-mac/Desktop/Utility/web"
 index_path = os.path.join(base_dir, 'index.html')
 css_path = os.path.join(base_dir, 'styles.css')
 app_js_path = os.path.join(base_dir, 'app.js')

@@ -1,8 +1,11 @@
 import os, base64, re, subprocess, shutil, math
 from PIL import Image, ImageDraw
 
-win_dir = "/Users/abi-mac/Desktop/Utility/standalone/windows"
-mac_dir = "/Users/abi-mac/Desktop/Utility/standalone/mac"
+mac_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = os.path.abspath(os.path.join(mac_dir, "..", ".."))
+win_dir = os.path.join(root_dir, "standalone", "windows")
+base_dir = os.path.join(root_dir, "web")
+web_downloads_dir = os.path.join(base_dir, "downloads")
 app_dir = os.path.join(mac_dir, "Toolify.app")
 
 # 1. Recreate the App bundle directories
@@ -113,7 +116,6 @@ os.remove(base_png)
 print("✓ Recreated AppIcon.icns icon.")
 
 # 5. Bundle web assets
-base_dir = "/Users/abi-mac/Desktop/Utility/web"
 index_path = os.path.join(base_dir, 'index.html')
 css_path = os.path.join(base_dir, 'styles.css')
 app_js_path = os.path.join(base_dir, 'app.js')
@@ -289,12 +291,13 @@ create_dmg_cmd = [
 ]
 subprocess.check_call(create_dmg_cmd)
 
-# Clean up temp source folder
+# Clean up temp source folder and intermediate app bundle
 shutil.rmtree(temp_src, ignore_errors=True)
+shutil.rmtree(app_dir, ignore_errors=True)
 
 # Copy output DMG into web downloads folder
-web_downloads_dir = "/Users/abi-mac/Desktop/Utility/web/downloads"
 os.makedirs(web_downloads_dir, exist_ok=True)
 shutil.copy(dmg_output, os.path.join(web_downloads_dir, "Toolify.dmg"))
 
+print("✓ Cleanup completed. macOS folder remains clean containing only build_dmg.py and Toolify.dmg!")
 print("✓ Beautiful styled macOS DMG installer compiled and copied to web downloads!")

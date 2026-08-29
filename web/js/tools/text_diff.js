@@ -1,419 +1,727 @@
-// Text Diff Tool — Beyond Compare Style Side-by-Side Real-Time Diff
+// Text Diff Tool — Beyond Compare Style Side-by-Side Real-Time Diff Editor
 const TextDiffTool = {
+  activeView: 'split', // 'split', 'left', 'right', 'unified'
+  activeFilter: 'all', // 'all', 'diffs', 'matches'
+  currentDiffIndex: -1,
+  diffLineIndices: [],
+  syncScrollEnabled: true,
+  isScrolling: false,
+
   init() {
-    const leftTextarea = document.getElementById('diff-text-left');
-    const rightTextarea = document.getElementById('diff-text-right');
-    
-    const fileInputLeft = document.getElementById('diff-file-input-left');
-    const fileInputRight = document.getElementById('diff-file-input-right');
+    this.cacheElements();
+    this.bindEvents();
+    this.loadInitialData();
+  },
 
-    const copyLeft = document.getElementById('diff-copy-left');
-    const copyRight = document.getElementById('diff-copy-right');
-    const downloadLeft = document.getElementById('diff-download-left');
-    const downloadRight = document.getElementById('diff-download-right');
+  cacheElements() {
+    this.leftEditor = document.getElementById('diff-text-left');
+    this.rightEditor = document.getElementById('diff-text-right');
+    this.leftGutter = document.getElementById('diff-gutter-left');
+    this.rightGutter = document.getElementById('diff-gutter-right');
+    this.leftBackdrop = document.getElementById('diff-backdrop-left');
+    this.rightBackdrop = document.getElementById('diff-backdrop-right');
+    this.unifiedPanel = document.getElementById('diff-unified-panel');
+    this.sbsContainer = document.getElementById('diff-sbs-container');
 
-    const sampleBtn = document.getElementById('diff-sample-btn');
-    const swapBtn = document.getElementById('diff-swap-btn');
-    const clearBtn = document.getElementById('diff-clear-btn');
+    this.sampleBtn = document.getElementById('diff-sample-btn');
+    this.swapBtn = document.getElementById('diff-swap-btn');
+    this.clearBtn = document.getElementById('diff-clear-btn');
+    this.prevDiffBtn = document.getElementById('diff-prev-btn');
+    this.nextDiffBtn = document.getElementById('diff-next-btn');
+    this.mergeL2RBtn = document.getElementById('diff-merge-l2r');
+    this.mergeR2LBtn = document.getElementById('diff-merge-r2l');
 
-    const btnFullscreenLeft = document.getElementById('diff-fullscreen-left');
-    const btnFullscreenRight = document.getElementById('diff-fullscreen-right');
+    this.fileInputLeft = document.getElementById('diff-file-input-left');
+    this.fileInputRight = document.getElementById('diff-file-input-right');
+    this.copyLeft = document.getElementById('diff-copy-left');
+    this.copyRight = document.getElementById('diff-copy-right');
+    this.downloadLeft = document.getElementById('diff-download-left');
+    this.downloadRight = document.getElementById('diff-download-right');
+    this.btnFullscreenLeft = document.getElementById('diff-fullscreen-left');
+    this.btnFullscreenRight = document.getElementById('diff-fullscreen-right');
 
-    if (!leftTextarea || !rightTextarea) return;
+    this.statAdd = document.getElementById('diff-stat-add');
+    this.statDel = document.getElementById('diff-stat-del');
+    this.statMod = document.getElementById('diff-stat-mod');
+    this.statEq = document.getElementById('diff-stat-eq');
+    this.statMatch = document.getElementById('diff-stat-match');
 
-    // Start empty
-    this.updateLineNumbers('left');
-    this.updateLineNumbers('right');
+    this.viewModeBtns = document.querySelectorAll('[data-diff-view]');
+    this.filterModeBtns = document.querySelectorAll('[data-diff-filter]');
+  },
 
-    // Input events
-    leftTextarea.addEventListener('input', () => {
-      this.updateLineNumbers('left');
+  bindEvents() {
+    if (!this.leftEditor || !this.rightEditor) return;
+
+    // Real-time input diffing (Zero cursor interference)
+    const handleInput = () => {
       this.compare();
-    });
-    rightTextarea.addEventListener('input', () => {
-      this.updateLineNumbers('right');
-      this.compare();
-    });
+    };
 
-    // Sample, Swap & Clear
-    if (sampleBtn) {
-      sampleBtn.addEventListener('click', () => {
-        this.loadSample();
-        App.showToast('Sample comparison loaded');
-      });
-    }
+    this.leftEditor.addEventListener('input', handleInput);
+    this.rightEditor.addEventListener('input', handleInput);
 
-    if (swapBtn) {
-      swapBtn.addEventListener('click', () => {
-        const tmp = leftTextarea.value;
-        leftTextarea.value = rightTextarea.value;
-        rightTextarea.value = tmp;
-        
-        this.updateLineNumbers('left');
-        this.updateLineNumbers('right');
+    // Tab Key Indentation
+    const handleKeydown = (e, textarea) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
+        textarea.selectionStart = textarea.selectionEnd = start + 2;
         this.compare();
-        App.showToast('Swapped left and right text streams');
-      });
-    }
+      }
+    };
 
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
-        leftTextarea.value = '';
-        rightTextarea.value = '';
-        this.updateLineNumbers('left');
-        this.updateLineNumbers('right');
-        this.compare();
-        App.showToast('Cleared comparison streams');
-      });
-    }
+    this.leftEditor.addEventListener('keydown', (e) => handleKeydown(e, this.leftEditor));
+    this.rightEditor.addEventListener('keydown', (e) => handleKeydown(e, this.rightEditor));
 
     // Fullscreen Toggles
-    if (btnFullscreenLeft) {
-      btnFullscreenLeft.addEventListener('click', () => this.toggleFullscreen('left'));
+    if (this.btnFullscreenLeft) {
+      this.btnFullscreenLeft.addEventListener('click', () => this.toggleFullscreen('left'));
     }
-    if (btnFullscreenRight) {
-      btnFullscreenRight.addEventListener('click', () => this.toggleFullscreen('right'));
+    if (this.btnFullscreenRight) {
+      this.btnFullscreenRight.addEventListener('click', () => this.toggleFullscreen('right'));
     }
 
-    // Left File Loader
-    if (fileInputLeft) {
-      fileInputLeft.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          leftTextarea.value = evt.target.result;
-          this.updateLineNumbers('left');
-          this.compare();
-          App.showToast(`Loaded ${file.name} (left)`);
-        };
-        reader.readAsText(file);
+    // Exit fullscreen on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        this.exitFullscreen();
+      }
+    });
+
+    // Synchronized scrolling
+    this.leftEditor.addEventListener('scroll', () => this.handleScroll('left'));
+    this.rightEditor.addEventListener('scroll', () => this.handleScroll('right'));
+
+    // Sample Diff
+    if (this.sampleBtn) {
+      this.sampleBtn.addEventListener('click', () => {
+        this.loadSample();
+        if (window.App && App.showToast) App.showToast('Beyond Compare sample diff loaded');
       });
     }
 
-    // Right File Loader
-    if (fileInputRight) {
-      fileInputRight.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          rightTextarea.value = evt.target.result;
-          this.updateLineNumbers('right');
-          this.compare();
-          App.showToast(`Loaded ${file.name} (right)`);
-        };
-        reader.readAsText(file);
+    // Swap Sides
+    if (this.swapBtn) {
+      this.swapBtn.addEventListener('click', () => {
+        const tmp = this.leftEditor.value;
+        this.leftEditor.value = this.rightEditor.value;
+        this.rightEditor.value = tmp;
+        this.compare();
+        if (window.App && App.showToast) App.showToast('Swapped Left and Right comparison streams');
       });
     }
 
-    // Left Copy & Download
-    if (copyLeft) {
-      copyLeft.addEventListener('click', () => App.copyToClipboard(leftTextarea.value));
-    }
-    if (downloadLeft) {
-      downloadLeft.addEventListener('click', () => this.triggerDownload(leftTextarea.value, 'original_diff.txt'));
-    }
-
-    // Right Copy & Download
-    if (copyRight) {
-      copyRight.addEventListener('click', () => App.copyToClipboard(rightTextarea.value));
-    }
-    if (downloadRight) {
-      downloadRight.addEventListener('click', () => this.triggerDownload(rightTextarea.value, 'modified_diff.txt'));
+    // Clear Both
+    if (this.clearBtn) {
+      this.clearBtn.addEventListener('click', () => {
+        this.leftEditor.value = '';
+        this.rightEditor.value = '';
+        this.compare();
+        if (window.App && App.showToast) App.showToast('Cleared comparison streams');
+      });
     }
 
-    // Synchronized scroll between output panels
-    const panelL = document.getElementById('diff-panel-left');
-    const panelR = document.getElementById('diff-panel-right');
-    if (panelL && panelR) {
-      panelL.addEventListener('scroll', () => { panelR.scrollTop = panelL.scrollTop; });
-      panelR.addEventListener('scroll', () => { panelL.scrollTop = panelL.scrollTop; });
+    // Merge Operations
+    if (this.mergeL2RBtn) {
+      this.mergeL2RBtn.addEventListener('click', () => {
+        this.rightEditor.value = this.leftEditor.value;
+        this.compare();
+        if (window.App && App.showToast) App.showToast('Merged Left → Right (Exact Copy)');
+      });
     }
 
-    this.updateLineNumbers('left');
-    this.updateLineNumbers('right');
-    this.compare();
+    if (this.mergeR2LBtn) {
+      this.mergeR2LBtn.addEventListener('click', () => {
+        this.leftEditor.value = this.rightEditor.value;
+        this.compare();
+        if (window.App && App.showToast) App.showToast('Merged Right → Left (Exact Copy)');
+      });
+    }
+
+    // Difference Navigation
+    if (this.prevDiffBtn) {
+      this.prevDiffBtn.addEventListener('click', () => this.navigateDiff(-1));
+    }
+    if (this.nextDiffBtn) {
+      this.nextDiffBtn.addEventListener('click', () => this.navigateDiff(1));
+    }
+
+    // View Mode Switcher
+    this.viewModeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const mode = btn.getAttribute('data-diff-view');
+        this.setViewMode(mode);
+      });
+    });
+
+    // Filter Mode Switcher
+    this.filterModeBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filter = btn.getAttribute('data-diff-filter');
+        this.setFilterMode(filter);
+      });
+    });
+
+    // File input handlers
+    if (this.fileInputLeft) {
+      this.fileInputLeft.addEventListener('change', (e) => this.loadFile(e, 'left'));
+    }
+    if (this.fileInputRight) {
+      this.fileInputRight.addEventListener('change', (e) => this.loadFile(e, 'right'));
+    }
+
+    // Copy & Download actions
+    if (this.copyLeft) {
+      this.copyLeft.addEventListener('click', () => {
+        if (window.App && App.copyToClipboard) App.copyToClipboard(this.leftEditor.value);
+      });
+    }
+    if (this.copyRight) {
+      this.copyRight.addEventListener('click', () => {
+        if (window.App && App.copyToClipboard) App.copyToClipboard(this.rightEditor.value);
+      });
+    }
+    if (this.downloadLeft) {
+      this.downloadLeft.addEventListener('click', () => this.triggerDownload(this.leftEditor.value, 'original_left.txt'));
+    }
+    if (this.downloadRight) {
+      this.downloadRight.addEventListener('click', () => this.triggerDownload(this.rightEditor.value, 'modified_right.txt'));
+    }
   },
 
   toggleFullscreen(side) {
-    const container = document.getElementById('diff-sbs-container');
+    const card = document.getElementById(`diff-card-${side}`);
+    const btn = document.getElementById(`diff-fullscreen-${side}`);
+    if (!card || !btn) return;
+
+    const iconExpand = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`;
+    const iconCompress = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>`;
+
+    const isMax = card.classList.contains('fullscreen-maximized');
+
+    // Close any other open fullscreen
+    this.exitFullscreen();
+
+    if (!isMax) {
+      card.classList.add('fullscreen-maximized');
+      btn.innerHTML = iconCompress;
+      btn.title = `Restore Stream ${side.toUpperCase()}`;
+      if (window.App && App.showToast) App.showToast(`Stream ${side === 'left' ? 'A' : 'B'} Maximized (Press Esc to Exit)`);
+    }
+  },
+
+  exitFullscreen() {
+    const iconExpand = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`;
     const leftCard = document.getElementById('diff-card-left');
     const rightCard = document.getElementById('diff-card-right');
-    const btnLeft = document.getElementById('diff-fullscreen-left');
-    const btnRight = document.getElementById('diff-fullscreen-right');
-    if (!container || !leftCard || !rightCard) return;
+    const btnL = document.getElementById('diff-fullscreen-left');
+    const btnR = document.getElementById('diff-fullscreen-right');
 
-    const isLeftFull = leftCard.classList.contains('fullscreen-active');
-    const isRightFull = rightCard.classList.contains('fullscreen-active');
-
-    const iconNormal = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`;
-    const iconActive = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
-
-    if (side === 'left') {
-      if (isLeftFull) {
-        container.style.gridTemplateColumns = '1fr 1fr';
-        rightCard.style.display = 'flex';
-        leftCard.classList.remove('fullscreen-active');
-        if (btnLeft) {
-          btnLeft.innerHTML = iconNormal;
-          btnLeft.title = "Fullscreen Left";
-        }
-      } else {
-        container.style.gridTemplateColumns = '1fr';
-        rightCard.style.display = 'none';
-        leftCard.classList.add('fullscreen-active');
-        if (btnLeft) {
-          btnLeft.innerHTML = iconActive;
-          btnLeft.title = "Exit Fullscreen";
-        }
-      }
-    } else if (side === 'right') {
-      if (isRightFull) {
-        container.style.gridTemplateColumns = '1fr 1fr';
-        leftCard.style.display = 'flex';
-        rightCard.classList.remove('fullscreen-active');
-        if (btnRight) {
-          btnRight.innerHTML = iconNormal;
-          btnRight.title = "Fullscreen Right";
-        }
-      } else {
-        container.style.gridTemplateColumns = '1fr';
-        leftCard.style.display = 'none';
-        rightCard.classList.add('fullscreen-active');
-        if (btnRight) {
-          btnRight.innerHTML = iconActive;
-          btnRight.title = "Exit Fullscreen";
-        }
-      }
-    }
+    if (leftCard) leftCard.classList.remove('fullscreen-maximized');
+    if (rightCard) rightCard.classList.remove('fullscreen-maximized');
+    if (btnL) { btnL.innerHTML = iconExpand; btnL.title = 'Maximize Stream A'; }
+    if (btnR) { btnR.innerHTML = iconExpand; btnR.title = 'Maximize Stream B'; }
   },
 
-  updateLineNumbers(side) {
-    const textarea = document.getElementById(`diff-text-${side}`);
-    const numbersEl = document.getElementById(`diff-line-numbers-${side}`);
-    if (!textarea || !numbersEl) return;
+  handleScroll(source) {
+    if (!this.syncScrollEnabled || this.isScrolling) return;
+    this.isScrolling = true;
 
-    const lines = textarea.value.split('\n').length;
-    let html = '';
-    for (let i = 1; i <= lines; i++) {
-      html += `${i}<br>`;
+    if (source === 'left') {
+      const top = this.leftEditor.scrollTop;
+      if (this.leftBackdrop) this.leftBackdrop.scrollTop = top;
+      if (this.leftGutter) this.leftGutter.scrollTop = top;
+
+      if (this.rightEditor && this.activeView === 'split') {
+        this.rightEditor.scrollTop = top;
+        if (this.rightBackdrop) this.rightBackdrop.scrollTop = top;
+        if (this.rightGutter) this.rightGutter.scrollTop = top;
+      }
+    } else {
+      const top = this.rightEditor.scrollTop;
+      if (this.rightBackdrop) this.rightBackdrop.scrollTop = top;
+      if (this.rightGutter) this.rightGutter.scrollTop = top;
+
+      if (this.leftEditor && this.activeView === 'split') {
+        this.leftEditor.scrollTop = top;
+        if (this.leftBackdrop) this.leftBackdrop.scrollTop = top;
+        if (this.leftGutter) this.leftGutter.scrollTop = top;
+      }
     }
-    numbersEl.innerHTML = html;
+
+    setTimeout(() => { this.isScrolling = false; }, 20);
   },
 
-  loadSample() {
-    const leftTextarea = document.getElementById('diff-text-left');
-    const rightTextarea = document.getElementById('diff-text-right');
-    if (!leftTextarea || !rightTextarea) return;
+  setViewMode(mode) {
+    this.activeView = mode;
+    this.viewModeBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-diff-view') === mode);
+    });
 
-    leftTextarea.value = `// Authentication Handler v1.0
-function handleLogin(req, res) {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).send("Missing credentials");
-  }
-  const user = db.findUser(username);
-  if (user && user.password === password) {
-    const token = generateToken(user);
-    return res.json({ token });
-  }
-  return res.status(401).send("Invalid credentials");
-}
+    const leftCard = document.getElementById('diff-card-left');
+    const rightCard = document.getElementById('diff-card-right');
+    const unifiedCard = document.getElementById('diff-card-unified');
 
-module.exports = { handleLogin };`;
+    if (!this.sbsContainer || !leftCard || !rightCard) return;
 
-    rightTextarea.value = `// Authentication Handler v2.0 — Security Hardened
-async function handleLogin(req, res) {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    return res.status(400).json({ error: "Missing credentials" });
-  }
-  const user = await db.findUser(username);
-  const isValid = await bcrypt.compare(password, user.hash);
-  if (user && isValid) {
-    const token = await generateToken(user, { expiresIn: '2h' });
-    return res.json({ token, role: user.role });
-  }
-  logger.warn('Failed login attempt', { username, ip: req.ip });
-  return res.status(401).json({ error: "Invalid credentials" });
-}
+    if (mode === 'split') {
+      this.sbsContainer.style.display = 'grid';
+      leftCard.style.display = 'flex';
+      rightCard.style.display = 'flex';
+      if (unifiedCard) unifiedCard.style.display = 'none';
+    } else if (mode === 'left') {
+      this.sbsContainer.style.display = 'grid';
+      leftCard.style.display = 'flex';
+      rightCard.style.display = 'none';
+      if (unifiedCard) unifiedCard.style.display = 'none';
+    } else if (mode === 'right') {
+      this.sbsContainer.style.display = 'grid';
+      leftCard.style.display = 'none';
+      rightCard.style.display = 'flex';
+      if (unifiedCard) unifiedCard.style.display = 'none';
+    } else if (mode === 'unified') {
+      this.sbsContainer.style.display = 'none';
+      if (unifiedCard) unifiedCard.style.display = 'flex';
+    }
 
-module.exports = { handleLogin };`;
-
-    this.updateLineNumbers('left');
-    this.updateLineNumbers('right');
     this.compare();
   },
 
+  setFilterMode(filter) {
+    this.activeFilter = filter;
+    this.filterModeBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-diff-filter') === filter);
+    });
+    this.compare();
+  },
+
+  loadInitialData() {
+    if (!this.leftEditor || !this.rightEditor) return;
+    this.compare();
+  },
+
+  loadSample() {
+    if (!this.leftEditor || !this.rightEditor) return;
+    this.leftEditor.value = `// Beyond Compare Live Diff Demo - Stream A
+function calculateInvoiceTotal(items, discountRate, taxPercent) {
+  let subtotal = 0;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    subtotal += item.price * item.quantity;
+  }
+
+  // Apply flat discount
+  const discount = subtotal * discountRate;
+  const taxableAmount = subtotal - discount;
+
+  // Compute total
+  const tax = taxableAmount * (taxPercent / 100);
+  const grandTotal = taxableAmount + tax;
+
+  return {
+    subtotal: subtotal.toFixed(2),
+    discount: discount.toFixed(2),
+    tax: tax.toFixed(2),
+    total: grandTotal.toFixed(2)
+  };
+}
+
+module.exports = { calculateInvoiceTotal };`;
+
+    this.rightEditor.value = `// Beyond Compare Live Diff Demo - Stream B (Enhanced)
+function calculateInvoiceTotal(items = [], discountRate = 0, taxPercent = 0) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return { subtotal: '0.00', discount: '0.00', tax: '0.00', total: '0.00' };
+  }
+
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  // Apply tiered promotional discount
+  const discount = Math.min(subtotal * discountRate, 500);
+  const taxableAmount = Math.max(0, subtotal - discount);
+
+  // Compute final tax & grand total
+  const tax = taxableAmount * (taxPercent / 100);
+  const grandTotal = taxableAmount + tax;
+
+  return {
+    subtotal: subtotal.toFixed(2),
+    discount: discount.toFixed(2),
+    tax: tax.toFixed(2),
+    total: grandTotal.toFixed(2),
+    currency: 'USD'
+  };
+}
+
+module.exports = { calculateInvoiceTotal };`;
+
+    this.compare();
+  },
+
+  loadFile(event, side) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (side === 'left' && this.leftEditor) {
+        this.leftEditor.value = e.target.result;
+      } else if (side === 'right' && this.rightEditor) {
+        this.rightEditor.value = e.target.result;
+      }
+      this.compare();
+      if (window.App && App.showToast) App.showToast(`Loaded ${file.name} into ${side} pane`);
+    };
+    reader.readAsText(file);
+  },
+
   compare() {
-    const leftTextarea = document.getElementById('diff-text-left');
-    const rightTextarea = document.getElementById('diff-text-right');
-    const panelL = document.getElementById('diff-panel-left');
-    const panelR = document.getElementById('diff-panel-right');
-    if (!leftTextarea || !rightTextarea || !panelL || !panelR) return;
+    if (!this.leftEditor || !this.rightEditor) return;
 
-    const leftVal = leftTextarea.value;
-    const rightVal = rightTextarea.value;
-
-    const leftLines = leftVal.split('\n');
-    const rightLines = rightVal.split('\n');
+    const leftVal = this.leftEditor.value;
+    const rightVal = this.rightEditor.value;
 
     if (!leftVal && !rightVal) {
-      panelL.innerHTML = '<div class="diff-empty">Paste or type original text above</div>';
-      panelR.innerHTML = '<div class="diff-empty">Paste or type modified text above</div>';
+      if (this.leftGutter) this.leftGutter.innerHTML = '<div class="bc-gutter-row bc-gutter-eq"><span class="bc-line-num">1</span><span class="bc-diff-sign">=</span></div>';
+      if (this.rightGutter) this.rightGutter.innerHTML = '<div class="bc-gutter-row bc-gutter-eq"><span class="bc-line-num">1</span><span class="bc-diff-sign">=</span></div>';
+      if (this.leftBackdrop) this.leftBackdrop.innerHTML = '<div class="bc-line-row bc-line-eq"></div>';
+      if (this.rightBackdrop) this.rightBackdrop.innerHTML = '<div class="bc-line-row bc-line-eq"></div>';
+      if (this.unifiedPanel) this.unifiedPanel.innerHTML = '<div class="bc-empty-msg">Type or paste text in Stream A & Stream B, or click "Sample Diff" above.</div>';
       this.updateStats(0, 0, 0, 0);
       return;
     }
 
-    // LCS-based diff
+    const leftLines = leftVal ? leftVal.split('\n') : [];
+    const rightLines = rightVal ? rightVal.split('\n') : [];
+
     const ops = this.computeOps(leftLines, rightLines);
 
-    let htmlL = '';
-    let htmlR = '';
-    let addCount = 0, delCount = 0, modCount = 0, eqCount = 0;
+    // Map line statuses directly to individual editor lines
+    const leftStatus = new Array(leftLines.length).fill('eq');
+    const rightStatus = new Array(rightLines.length).fill('eq');
 
-    ops.forEach(op => {
+    this.diffLineIndices = [];
+    let addCount = 0, delCount = 0, modCount = 0, eqCount = 0;
+    let unifiedHtml = '';
+
+    let lIdx = 0;
+    let rIdx = 0;
+
+    ops.forEach((op) => {
       if (op.type === 'eq') {
         eqCount++;
-        htmlL += this.renderLine(op.leftNum, op.left, 'eq');
-        htmlR += this.renderLine(op.rightNum, op.right, 'eq');
+        if (lIdx < leftStatus.length) leftStatus[lIdx] = 'eq';
+        if (rIdx < rightStatus.length) rightStatus[rIdx] = 'eq';
+
+        const esc = this.escape(op.text);
+        unifiedHtml += `<div class="bc-unified-row bc-unified-eq"><span class="bc-un-num">${lIdx + 1}</span><span class="bc-un-num">${rIdx + 1}</span><span class="bc-un-sign"> </span><code>${esc || '&nbsp;'}</code></div>`;
+
+        lIdx++;
+        rIdx++;
       } else if (op.type === 'del') {
         delCount++;
-        htmlL += this.renderLine(op.leftNum, op.left, 'del');
-        htmlR += this.renderLine('', '', 'del-empty');
+        if (lIdx < leftStatus.length) leftStatus[lIdx] = 'del';
+        this.diffLineIndices.push(lIdx);
+
+        const esc = this.escape(op.left);
+        unifiedHtml += `<div class="bc-unified-row bc-unified-del"><span class="bc-un-num">${lIdx + 1}</span><span class="bc-un-num"></span><span class="bc-un-sign">−</span><code>${esc || '&nbsp;'}</code></div>`;
+
+        lIdx++;
       } else if (op.type === 'add') {
         addCount++;
-        htmlL += this.renderLine('', '', 'add-empty');
-        htmlR += this.renderLine(op.rightNum, op.right, 'add');
+        if (rIdx < rightStatus.length) rightStatus[rIdx] = 'add';
+        this.diffLineIndices.push(rIdx);
+
+        const esc = this.escape(op.right);
+        unifiedHtml += `<div class="bc-unified-row bc-unified-add"><span class="bc-un-num"></span><span class="bc-un-num">${rIdx + 1}</span><span class="bc-un-sign">+</span><code>${esc || '&nbsp;'}</code></div>`;
+
+        rIdx++;
       } else if (op.type === 'mod') {
         modCount++;
-        htmlL += this.renderLine(op.leftNum, op.left, 'mod-old', op.charDiffLeft);
-        htmlR += this.renderLine(op.rightNum, op.right, 'mod-new', op.charDiffRight);
+        if (lIdx < leftStatus.length) leftStatus[lIdx] = 'mod';
+        if (rIdx < rightStatus.length) rightStatus[rIdx] = 'mod';
+        this.diffLineIndices.push(lIdx);
+
+        const wordDiff = this.computeWordDiff(op.left, op.right);
+        unifiedHtml += `<div class="bc-unified-row bc-unified-del"><span class="bc-un-num">${lIdx + 1}</span><span class="bc-un-num"></span><span class="bc-un-sign">−</span><code>${wordDiff.left || '&nbsp;'}</code></div>`;
+        unifiedHtml += `<div class="bc-unified-row bc-unified-add"><span class="bc-un-num"></span><span class="bc-un-num">${rIdx + 1}</span><span class="bc-un-sign">+</span><code>${wordDiff.right || '&nbsp;'}</code></div>`;
+
+        lIdx++;
+        rIdx++;
       }
     });
 
-    panelL.innerHTML = htmlL;
-    panelR.innerHTML = htmlR;
+    // 1-to-1 Left Gutter and Backdrop Rows (Exact matching line count, NO cursor displacement!)
+    let leftGutterHtml = '';
+    let leftBackdropHtml = '';
+    const leftCount = Math.max(1, leftLines.length);
+    for (let i = 0; i < leftCount; i++) {
+      const status = leftLines.length > 0 ? (leftStatus[i] || 'eq') : 'eq';
+      const sign = status === 'del' ? '−' : status === 'mod' ? '~' : '=';
+      leftGutterHtml += `<div class="bc-gutter-row bc-gutter-${status}"><span class="bc-line-num">${i + 1}</span><span class="bc-diff-sign">${sign}</span></div>`;
+      leftBackdropHtml += `<div class="bc-line-row bc-line-${status}"></div>`;
+    }
+
+    // 1-to-1 Right Gutter and Backdrop Rows (Exact matching line count, NO cursor displacement!)
+    let rightGutterHtml = '';
+    let rightBackdropHtml = '';
+    const rightCount = Math.max(1, rightLines.length);
+    for (let j = 0; j < rightCount; j++) {
+      const status = rightLines.length > 0 ? (rightStatus[j] || 'eq') : 'eq';
+      const sign = status === 'add' ? '+' : status === 'mod' ? '~' : '=';
+      rightGutterHtml += `<div class="bc-gutter-row bc-gutter-${status}"><span class="bc-line-num">${j + 1}</span><span class="bc-diff-sign">${sign}</span></div>`;
+      rightBackdropHtml += `<div class="bc-line-row bc-line-${status}"></div>`;
+    }
+
+    if (this.leftGutter) this.leftGutter.innerHTML = leftGutterHtml;
+    if (this.rightGutter) this.rightGutter.innerHTML = rightGutterHtml;
+    if (this.leftBackdrop) this.leftBackdrop.innerHTML = leftBackdropHtml;
+    if (this.rightBackdrop) this.rightBackdrop.innerHTML = rightBackdropHtml;
+    if (this.unifiedPanel) this.unifiedPanel.innerHTML = unifiedHtml || '<div class="bc-empty-msg">No differences found between streams.</div>';
+
     this.updateStats(addCount, delCount, modCount, eqCount);
   },
 
-  renderLine(num, text, type, charHighlights) {
-    const esc = App.escapeHtml(text || '');
-    let content = charHighlights || esc;
-    const cls = 'diff-row diff-' + type;
-    const sign = type === 'del' ? '−' : type === 'add' ? '+' : type === 'mod-old' ? '~' : type === 'mod-new' ? '~' : ' ';
-    const signCls = type.startsWith('mod') ? 'diff-sign-mod' : 'diff-sign-' + type.split('-')[0];
-    return `<div class="${cls}"><span class="diff-num">${num}</span><span class="diff-sgn ${signCls}">${sign}</span><code class="diff-code">${content}</code></div>`;
+  updateStats(add, del, mod, eq) {
+    if (this.statAdd) this.statAdd.textContent = `+ ${add} Added`;
+    if (this.statDel) this.statDel.textContent = `− ${del} Removed`;
+    if (this.statMod) this.statMod.textContent = `~ ${mod} Modified`;
+    if (this.statEq) this.statEq.textContent = `= ${eq} Unchanged`;
+
+    const total = add + del + mod + eq;
+    let matchPct = total === 0 ? 100 : Math.round((eq / total) * 100);
+    if (this.statMatch) {
+      this.statMatch.textContent = `${matchPct}% Match`;
+      if (matchPct === 100) {
+        this.statMatch.className = 'bc-match-badge bc-match-100';
+      } else if (matchPct >= 70) {
+        this.statMatch.className = 'bc-match-badge bc-match-high';
+      } else {
+        this.statMatch.className = 'bc-match-badge bc-match-low';
+      }
+    }
   },
 
-  updateStats(add, del, mod, eq) {
-    const sa = document.getElementById('diff-stat-add');
-    const sd = document.getElementById('diff-stat-del');
-    const sm = document.getElementById('diff-stat-mod');
-    const se = document.getElementById('diff-stat-eq');
-    if (sa) sa.textContent = `+ ${add} Added`;
-    if (sd) sd.textContent = `− ${del} Removed`;
-    if (sm) sm.textContent = `~ ${mod} Modified`;
-    if (se) se.textContent = `= ${eq} Unchanged`;
+  navigateDiff(direction) {
+    if (this.diffLineIndices.length === 0) {
+      if (window.App && App.showToast) App.showToast('No differences found to navigate');
+      return;
+    }
+
+    this.currentDiffIndex += direction;
+    if (this.currentDiffIndex >= this.diffLineIndices.length) {
+      this.currentDiffIndex = 0;
+    } else if (this.currentDiffIndex < 0) {
+      this.currentDiffIndex = this.diffLineIndices.length - 1;
+    }
+
+    const targetLineIndex = this.diffLineIndices[this.currentDiffIndex];
+    const lineHeight = 22;
+    const scrollPos = Math.max(0, (targetLineIndex * lineHeight) - 100);
+
+    if (this.leftEditor) this.leftEditor.scrollTop = scrollPos;
+    if (this.rightEditor) this.rightEditor.scrollTop = scrollPos;
+
+    if (window.App && App.showToast) {
+      App.showToast(`Difference ${this.currentDiffIndex + 1} of ${this.diffLineIndices.length}`);
+    }
   },
 
   computeOps(a, b) {
     const n = a.length, m = b.length;
-    const dp = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < m; j++) {
-        dp[i+1][j+1] = a[i] === b[j] ? dp[i][j] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
-      }
+    if (n === 0 && m === 0) return [];
+    if (n === 0) return b.map(line => ({ type: 'add', right: line }));
+    if (m === 0) return a.map(line => ({ type: 'del', left: line }));
+
+    // 1. Common Prefix (Top-down natural match)
+    let start = 0;
+    const prefix = [];
+    while (start < n && start < m && a[start] === b[start]) {
+      prefix.push({ type: 'eq', text: a[start] });
+      start++;
     }
 
-    // Backtrack LCS
-    let i = n, j = m;
-    const raw = [];
-    while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && a[i-1] === b[j-1]) {
-        raw.push({ type: 'eq', left: a[i-1], right: b[j-1], leftNum: i, rightNum: j });
-        i--; j--;
-      } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
-        raw.push({ type: 'add', right: b[j-1], rightNum: j });
-        j--;
+    // 2. Common Suffix (Bottom-up match)
+    let endA = n - 1;
+    let endB = m - 1;
+    const suffix = [];
+    while (endA >= start && endB >= start && a[endA] === b[endB]) {
+      suffix.push({ type: 'eq', text: a[endA] });
+      endA--;
+      endB--;
+    }
+    suffix.reverse();
+
+    // 3. Middle segment LCS
+    const midA = a.slice(start, endA + 1);
+    const midB = b.slice(start, endB + 1);
+    const midN = midA.length;
+    const midM = midB.length;
+
+    let middleOps = [];
+    if (midN > 0 || midM > 0) {
+      if (midN === 0) {
+        middleOps = midB.map(line => ({ type: 'add', right: line }));
+      } else if (midM === 0) {
+        middleOps = midA.map(line => ({ type: 'del', left: line }));
       } else {
-        raw.push({ type: 'del', left: a[i-1], leftNum: i });
-        i--;
+        const dp = Array.from({ length: midN + 1 }, () => new Int32Array(midM + 1));
+        for (let i = 0; i < midN; i++) {
+          for (let j = 0; j < midM; j++) {
+            dp[i + 1][j + 1] = midA[i] === midB[j] ? dp[i][j] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+          }
+        }
+
+        let i = midN, j = midM;
+        const raw = [];
+        while (i > 0 || j > 0) {
+          if (i > 0 && j > 0 && midA[i - 1] === midB[j - 1]) {
+            raw.push({ type: 'eq', text: midA[i - 1] });
+            i--; j--;
+          } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+            raw.push({ type: 'add', right: midB[j - 1] });
+            j--;
+          } else {
+            raw.push({ type: 'del', left: midA[i - 1] });
+            i--;
+          }
+        }
+        raw.reverse();
+        middleOps = raw;
       }
     }
-    raw.reverse();
 
-    // Merge adjacent del+add into 'mod' (modified) lines for side-by-side view
+    const combined = [...prefix, ...middleOps, ...suffix];
+
+    // Group adjacent del + add into mod
     const ops = [];
     let k = 0;
-    while (k < raw.length) {
-      if (raw[k].type === 'del' && k + 1 < raw.length && raw[k+1].type === 'add') {
-        const oldLine = raw[k].left;
-        const newLine = raw[k+1].right;
-        const charDiff = this.charDiff(oldLine, newLine);
+    while (k < combined.length) {
+      if (combined[k].type === 'del' && k + 1 < combined.length && combined[k + 1].type === 'add') {
         ops.push({
           type: 'mod',
-          left: oldLine,
-          right: newLine,
-          leftNum: raw[k].leftNum,
-          rightNum: raw[k+1].rightNum,
-          charDiffLeft: charDiff.left,
-          charDiffRight: charDiff.right
+          left: combined[k].left,
+          right: combined[k + 1].right
         });
         k += 2;
       } else {
-        ops.push(raw[k]);
+        ops.push(combined[k]);
         k++;
       }
     }
     return ops;
   },
 
-  charDiff(oldStr, newStr) {
-    const oldChars = oldStr.split('');
-    const newChars = newStr.split('');
-    const n = oldChars.length, m = newChars.length;
-    const dp = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
-    for (let i = 0; i < n; i++)
-      for (let j = 0; j < m; j++)
-        dp[i+1][j+1] = oldChars[i] === newChars[j] ? dp[i][j] + 1 : Math.max(dp[i+1][j], dp[i][j+1]);
+  computeWordDiff(oldStr, newStr) {
+    const esc = (s) => this.escape(s);
+    if (!oldStr && !newStr) return { left: '', right: '' };
+    if (!oldStr) return { left: '', right: `<mark class="bc-diff-add-word">${esc(newStr)}</mark>` };
+    if (!newStr) return { left: `<mark class="bc-diff-del-word">${esc(oldStr)}</mark>`, right: '' };
 
-    let i = n, j = m;
-    const seq = [];
-    while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && oldChars[i-1] === newChars[j-1]) {
-        seq.push({ type: 'eq', oldC: oldChars[i-1], newC: newChars[j-1] }); i--; j--;
-      } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
-        seq.push({ type: 'add', newC: newChars[j-1] }); j--;
+    const tokenize = (str) => str.match(/(\s+|[a-zA-Z0-9_]+|[^\s\w])/g) || [];
+    const oldTokens = tokenize(oldStr);
+    const newTokens = tokenize(newStr);
+
+    const n = oldTokens.length, m = newTokens.length;
+
+    // Common Prefix
+    let start = 0;
+    const prefix = [];
+    while (start < n && start < m && oldTokens[start] === newTokens[start]) {
+      prefix.push({ type: 'eq', text: oldTokens[start] });
+      start++;
+    }
+
+    // Common Suffix
+    let endA = n - 1;
+    let endB = m - 1;
+    const suffix = [];
+    while (endA >= start && endB >= start && oldTokens[endA] === newTokens[endB]) {
+      suffix.push({ type: 'eq', text: oldTokens[endA] });
+      endA--;
+      endB--;
+    }
+    suffix.reverse();
+
+    const midA = oldTokens.slice(start, endA + 1);
+    const midB = newTokens.slice(start, endB + 1);
+    const midN = midA.length;
+    const midM = midB.length;
+
+    let middleDiffs = [];
+    if (midN > 0 || midM > 0) {
+      if (midN === 0) {
+        middleDiffs = midB.map(t => ({ type: 'add', text: t }));
+      } else if (midM === 0) {
+        middleDiffs = midA.map(t => ({ type: 'del', text: t }));
       } else {
-        seq.push({ type: 'del', oldC: oldChars[i-1] }); i--;
+        const dp = Array.from({ length: midN + 1 }, () => new Int32Array(midM + 1));
+        for (let i = 0; i < midN; i++) {
+          for (let j = 0; j < midM; j++) {
+            dp[i + 1][j + 1] = midA[i] === midB[j] ? dp[i][j] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+          }
+        }
+
+        let i = midN, j = midM;
+        const raw = [];
+        while (i > 0 || j > 0) {
+          if (i > 0 && j > 0 && midA[i - 1] === midB[j - 1]) {
+            raw.push({ type: 'eq', text: midA[i - 1] });
+            i--; j--;
+          } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+            raw.push({ type: 'add', text: midB[j - 1] });
+            j--;
+          } else {
+            raw.push({ type: 'del', text: midA[i - 1] });
+            i--;
+          }
+        }
+        raw.reverse();
+        middleDiffs = raw;
       }
     }
-    seq.reverse();
 
-    let leftHtml = '', rightHtml = '';
-    seq.forEach(s => {
-      if (s.type === 'eq') {
-        leftHtml += App.escapeHtml(s.oldC);
-        rightHtml += App.escapeHtml(s.newC);
-      } else if (s.type === 'del') {
-        leftHtml += '<mark class="diff-char-del">' + App.escapeHtml(s.oldC) + '</mark>';
-      } else if (s.type === 'add') {
-        rightHtml += '<mark class="diff-char-add">' + App.escapeHtml(s.newC) + '</mark>';
+    const diffs = [...prefix, ...middleDiffs, ...suffix];
+
+    let leftHtml = '';
+    let rightHtml = '';
+
+    diffs.forEach(d => {
+      if (d.type === 'eq') {
+        leftHtml += esc(d.text);
+        rightHtml += esc(d.text);
+      } else if (d.type === 'del') {
+        leftHtml += `<mark class="bc-diff-del-word">${esc(d.text)}</mark>`;
+      } else if (d.type === 'add') {
+        rightHtml += `<mark class="bc-diff-add-word">${esc(d.text)}</mark>`;
       }
     });
+
     return { left: leftHtml, right: rightHtml };
+  },
+
+  escape(str) {
+    return (str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   },
 
   triggerDownload(text, filename) {
     if (!text) return;
-    const blob = new Blob([text], { type: 'text/plain' });
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = filename;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 };
 
 window.TextDiffTool = TextDiffTool;
+
+
