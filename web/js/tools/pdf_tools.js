@@ -226,12 +226,8 @@ const PdfTool = {
     } else if (this.activeTab === 'img2pdf') {
       fileList.forEach(file => {
         if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            this.selectedImages.push({ name: file.name, src: e.target.result });
-            this.renderItemsList();
-          };
-          reader.readAsDataURL(file);
+          this.selectedImages.push({ name: file.name, src: URL.createObjectURL(file), type: file.type });
+          this.renderItemsList();
         }
       });
       App.showToast(`Added ${fileList.length} image(s) for PDF generation`);

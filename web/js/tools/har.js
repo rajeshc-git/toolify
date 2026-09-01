@@ -55,24 +55,18 @@ const HarTool = {
     });
   },
 
-  loadFile(file) {
+  async loadFile(file) {
+    if (!file) return;
     Perf.showProgressBar('har-dropzone', 0, true);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const json = JSON.parse(e.target.result);
-        Perf.hideProgressBar('har-dropzone');
-        this.processHar(json);
-      } catch (err) {
-        Perf.hideProgressBar('har-dropzone');
-        App.showToast('Invalid HAR/JSON file: ' + err.message, 'error');
-      }
-    };
-    reader.onerror = () => {
+    try {
+      // Native C++ stream JSON parsing outside V8 string allocation
+      const json = await new Response(file).json();
       Perf.hideProgressBar('har-dropzone');
-      App.showToast('Error reading file', 'error');
-    };
-    reader.readAsText(file);
+      this.processHar(json);
+    } catch (err) {
+      Perf.hideProgressBar('har-dropzone');
+      App.showToast('Invalid HAR/JSON file: ' + err.message, 'error');
+    }
   },
 
 

@@ -133,16 +133,21 @@ const Base64TextTool = {
       if (this.currentFmt === 'b64' || this.currentFmt === 'urlsafe') {
         let clean = str.replace(/-/g, '+').replace(/_/g, '/');
         while (clean.length % 4) clean += '=';
-        plain.value = decodeURIComponent(escape(atob(clean)));
+        const binary = atob(clean);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        plain.value = new TextDecoder().decode(bytes);
       } else if (this.currentFmt === 'hex') {
         const hex = str.replace(/\s+/g, '');
-        const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+        const matches = hex.match(/.{1,2}/g) || [];
+        const bytes = new Uint8Array(matches.map(byte => parseInt(byte, 16)));
         plain.value = new TextDecoder().decode(bytes);
       } else if (this.currentFmt === 'bin') {
         const binArr = str.split(/\s+/).filter(Boolean);
         const bytes = new Uint8Array(binArr.map(b => parseInt(b, 2)));
         plain.value = new TextDecoder().decode(bytes);
       }
+      this._updateSizeBadge(str.length, plain.value.length);
       App.showToast('Decoded to plain text');
     } catch (err) {
       App.showToast(`Decoding Error: ${err.message}`, 'error');

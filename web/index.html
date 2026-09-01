@@ -207,7 +207,7 @@
             <polyline points="16 18 22 12 16 6"/>
             <polyline points="8 6 2 12 8 18"/>
           </svg></span>
-          <span class="nav-label">HTML Editor & Live Preview</span>
+          <span class="nav-label">HTML Editor</span>
         </a>
       </nav>
     </aside>
@@ -702,62 +702,164 @@
         <section id="view-json-tools" class="tool-view">
           <div class="tool-header">
             <div>
-              <h1 class="tool-title">JSON Studio & Visualizer</h1>
-              <p class="tool-subtitle">Format, validate, query, visual-edit nodes, and convert JSON ↔ CSV, YAML, & TypeScript.</p>
+              <h1 class="tool-title">JSON Studio, Table & Schema Workbench</h1>
+              <p class="tool-subtitle">Format, auto-repair, query, render interactive data tables, and convert JSON ↔ CSV, YAML, XML & TypeScript.</p>
             </div>
           </div>
           
-          <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
-            <button class="tab-btn active" id="json-tab-visualizer" style="font-weight: 700;">🌳 JSON Visualizer Studio</button>
-            <button class="tab-btn" id="json-tab-converter" style="font-weight: 700;">📝 Converter & Schema Studio</button>
+          <!-- Top Studio Mode Navigation -->
+          <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; flex-wrap: wrap;">
+            <button class="tab-btn active" id="json-tab-editor" style="font-weight: 700;">{ } Editor & Formatter</button>
+            <button class="tab-btn" id="json-tab-table" style="font-weight: 700;">▦ Table View</button>
+            <button class="tab-btn" id="json-tab-visualizer" style="font-weight: 700;">🌳 Tree Visualizer</button>
+            <button class="tab-btn" id="json-tab-converter" style="font-weight: 700;">🔄 Converters (CSV / YAML / XML)</button>
           </div>
 
-          <div class="tool-grid-2col" style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
+          <div class="tool-grid-2col" style="display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;">
             
             <!-- Left Workspace Pane -->
-            <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; flex-direction: column; gap: 12px; min-width: 0; width: 100%; overflow: hidden;">
               
-              <!-- Core Input Box (Text format helper) -->
-              <div class="url-card" style="padding: 12px 14px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                  <span style="font-weight: 700; font-size: 0.8rem; color: var(--text-main);">Raw Input Editor</span>
-                  <button class="url-action-icon-btn" onclick="JsonTool.downloadJson()" style="padding: 4px 8px; font-size: 0.72rem;" title="Download JSON file">Download</button>
+              <!-- Search & Replace Top Bar (As per screenshot) -->
+              <div class="json-search-bar" id="json-global-search-bar">
+                <div class="json-search-input-group">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-dim);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                  <input type="text" id="json-find-input" placeholder="Search (Ctrl+F)" autocomplete="off">
+                  <span id="json-find-count" style="font-size:0.68rem; color:var(--text-dim); padding-right:4px;">0/0</span>
                 </div>
-                <textarea id="json-input" class="code-textarea" style="height: 120px; font-size: 0.78rem;" placeholder="Paste raw JSON text here..."></textarea>
+                <div class="json-search-input-group">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-dim);"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path></svg>
+                  <input type="text" id="json-replace-input" placeholder="Replace with..." autocomplete="off">
+                </div>
+                <div class="json-search-btn-group">
+                  <button class="json-search-opt-btn" id="json-opt-regex" title="Regular Expression (.*)">.*</button>
+                  <button class="json-search-opt-btn" id="json-opt-case" title="Match Case (Aa)">Aa</button>
+                  <button class="json-search-opt-btn" id="json-opt-word" title="Match Whole Word (\b)">\b</button>
+                  <button class="json-action-separator"></button>
+                  <button class="json-search-opt-btn" id="json-btn-find-prev" title="Previous match (Shift+Enter)">▲</button>
+                  <button class="json-search-opt-btn" id="json-btn-find-next" title="Next match (Enter)">▼</button>
+                  <button class="log-filter-btn" id="json-btn-replace-one" style="padding:3px 6px; font-size:0.72rem;">Replace</button>
+                  <button class="log-filter-btn" id="json-btn-replace-all" style="padding:3px 6px; font-size:0.72rem;">All</button>
+                </div>
               </div>
 
-              <!-- PANE 1: Visualizer Studio -->
-              <div id="json-pane-visualizer" style="display: block;">
-                <div class="url-card" style="padding: 16px;">
-                  
-                  <!-- Find & Replace Bar -->
-                  <div style="display: flex; align-items: center; gap: 6px; background: var(--bg-pane); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; flex-wrap: wrap;">
-                    <div style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 140px;">
-                      <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-dim);">Find:</span>
-                      <input type="text" id="json-tree-search" class="input-text" style="padding: 3px 6px; font-size: 0.75rem; flex: 1; min-width: 80px;" placeholder="Search keys or values..." oninput="JsonTool.findSearch()">
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 140px;">
-                      <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-dim);">Replace:</span>
-                      <input type="text" id="json-tree-replace" class="input-text" style="padding: 3px 6px; font-size: 0.75rem; flex: 1; min-width: 80px;" placeholder="Replace string...">
-                    </div>
-                    <button class="log-filter-btn" style="padding: 3px 8px; font-size: 0.72rem;" onclick="JsonTool.replaceSearch()">Replace All</button>
-                  </div>
+              <!-- Action Toolbar (Matching user screenshot) -->
+              <div class="json-editor-toolbar">
+                <div class="json-tool-btn-group">
+                  <!-- Undo & Redo -->
+                  <button class="json-action-icon-btn" onclick="JsonTool.undo()" title="Undo (Ctrl+Z)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                  </button>
+                  <button class="json-action-icon-btn" onclick="JsonTool.redo()" title="Redo (Ctrl+Y)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+                  </button>
+                  <div class="json-action-separator"></div>
 
+                  <!-- Format / Beautify -->
+                  <button class="json-action-icon-btn" onclick="JsonTool.formatJson()" title="Format / Beautify JSON">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="3" y2="18"/></svg>
+                  </button>
+                  <!-- Auto Repair JSON -->
+                  <button class="json-action-icon-btn" onclick="JsonTool.repairJson()" title="Auto-repair invalid quotes, trailing commas, brackets">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                  </button>
+                  <!-- Minify -->
+                  <button class="json-action-icon-btn" onclick="JsonTool.minify()" title="Minify / Compact into single line">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/></svg>
+                  </button>
+                  <!-- Sort Keys -->
+                  <button class="json-action-icon-btn" onclick="JsonTool.sortKeys()" title="Sort object keys A-Z">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+                  </button>
+                  <!-- Redact -->
+                  <button class="json-action-icon-btn" onclick="JsonTool.redactSensitiveKeys()" title="Redact sensitive data (passwords, tokens, keys)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                  </button>
+                  <div class="json-action-separator"></div>
+
+                  <!-- View as Table -->
+                  <button class="json-action-icon-btn" id="json-btn-view-table" onclick="JsonTool.switchTab('table')" title="View as table">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
+                  </button>
+                  <!-- View as Tree -->
+                  <button class="json-action-icon-btn" id="json-btn-view-tree" onclick="JsonTool.switchTab('visualizer')" title="View as interactive tree">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  </button>
+                </div>
+
+                <div class="json-tool-btn-group">
+                  <!-- Sample Data -->
+                  <button class="log-filter-btn" id="json-sample-btn" style="padding:4px 8px; font-size:0.72rem;">Sample JSON</button>
+                  <!-- Copy -->
+                  <button class="json-action-icon-btn" onclick="JsonTool.copyCurrentJson(this)" title="Copy JSON">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                  <!-- Download / Save -->
+                  <button class="json-action-icon-btn" onclick="JsonTool.downloadJson()" title="Save as formatted JSON file">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  </button>
+                  <!-- Clear -->
+                  <button class="json-action-icon-btn" onclick="JsonTool.clearAll()" title="Clear editor">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- PANE 1: Editor & Formatter Studio -->
+              <div id="json-pane-editor" style="display: block;">
+                <div class="url-card" style="padding: 14px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-weight: 700; font-size: 0.8rem; color: var(--text-main);">JSON Document Editor</span>
+                    <span id="json-editor-status" style="font-size: 0.72rem; color: #10b981; font-weight: 600;">✓ Valid JSON</span>
+                  </div>
+                  <textarea id="json-input" class="code-textarea" style="min-height: 380px; font-size: 0.8rem; font-family: var(--font-mono); line-height: 1.5;" placeholder="Paste raw JSON or CSV text here..."></textarea>
+                </div>
+              </div>
+
+              <!-- PANE 2: Interactive Table View (▦ View as table) -->
+              <div id="json-pane-table" style="display: none;">
+                <div class="json-table-wrapper">
+                  <div class="json-table-header-bar">
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 200px;">
+                      <input type="text" id="json-table-search" class="input-text" style="font-size: 0.75rem; padding: 4px 8px; max-width: 240px;" placeholder="Search rows & columns..." oninput="JsonTool.filterTable()">
+                      <span id="json-table-row-count" style="font-size: 0.72rem; color: var(--text-dim); font-weight: 600;">0 rows</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <select id="json-table-page-size" class="select-box" style="font-size: 0.72rem; padding: 3px 6px;" onchange="JsonTool.changeTablePageSize(this.value)">
+                        <option value="25">25 rows/page</option>
+                        <option value="50" selected>50 rows/page</option>
+                        <option value="100">100 rows/page</option>
+                        <option value="250">250 rows/page</option>
+                        <option value="all">All rows</option>
+                      </select>
+                      <button class="log-filter-btn" onclick="JsonTool.exportTableCsv()" title="Export Table as CSV" style="padding: 4px 8px; font-size: 0.72rem;">Export CSV</button>
+                      <button class="log-filter-btn" onclick="JsonTool.switchTab('editor')" title="Back to Code" style="padding: 4px 8px; font-size: 0.72rem;">{ } Code</button>
+                    </div>
+                  </div>
+                  <div class="json-table-scroll" id="json-table-container">
+                    <!-- Table dynamically injected here -->
+                  </div>
+                  <div class="json-table-footer" id="json-table-footer">
+                    <span id="json-table-pagination-info">Showing 0 of 0</span>
+                    <div style="display: flex; gap: 4px;">
+                      <button class="log-filter-btn" id="json-table-prev-btn" onclick="JsonTool.prevTablePage()" style="padding: 3px 8px;">◀ Prev</button>
+                      <button class="log-filter-btn" id="json-table-next-btn" onclick="JsonTool.nextTablePage()" style="padding: 3px 8px;">Next ▶</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PANE 3: Visualizer Tree Studio -->
+              <div id="json-pane-visualizer" style="display: none;">
+                <div class="url-card" style="padding: 16px;">
                   <!-- Tree Actions Toolbar -->
                   <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                     <div style="display: flex; align-items: center; gap: 6px;">
-                      <!-- Undo / Redo -->
-                      <button class="url-action-icon-btn" onclick="JsonTool.undo()" title="Undo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></button>
-                      <button class="url-action-icon-btn" onclick="JsonTool.redo()" title="Redo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg></button>
-                      <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;"></div>
-                      <!-- Folds -->
                       <button class="log-filter-btn" onclick="JsonTool.unfoldAll()" title="Expand All" style="padding: 4px 8px;">Unfold</button>
                       <button class="log-filter-btn" onclick="JsonTool.foldAll()" title="Collapse All" style="padding: 4px 8px;">Fold</button>
                       <button class="log-filter-btn" onclick="JsonTool.collapseToLevel(1)" title="Level 1" style="padding: 4px 6px;">L1</button>
                       <button class="log-filter-btn" onclick="JsonTool.collapseToLevel(2)" title="Level 2" style="padding: 4px 6px;">L2</button>
                     </div>
-
-                    <!-- Filter Keys input -->
                     <input type="text" id="json-tree-filter" class="input-text" style="width: 140px; padding: 4px 8px; font-size: 0.72rem;" placeholder="Filter keys..." oninput="JsonTool.filterKeys()">
                   </div>
 
@@ -768,38 +870,36 @@
                   <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 6px; font-style: italic;">
                     * Double-click any leaf value (string, number, boolean) to edit inline. Press Enter to apply.
                   </div>
-
                 </div>
               </div>
 
-              <!-- PANE 2: Converter & Schema Studio -->
+              <!-- PANE 4: Converter & Schema Studio -->
               <div id="json-pane-converter" style="display: none;">
                 <div class="url-card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px;">
                   
                   <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <button class="log-filter-btn" id="json-format-btn">Format</button>
-                      <button class="log-filter-btn" id="json-minify-btn">Minify</button>
-                      <button class="log-filter-btn" id="json-redact-btn" title="Redact tokens, API keys, passwords">Redact Keys</button>
-                    </div>
-                    
-                    <div class="converters-btn-group" style="display: flex; gap: 4px;">
-                      <button class="log-filter-btn active log-info" data-json-mode="formatted" style="padding: 4px 8px;">JSON</button>
-                      <button class="log-filter-btn" data-json-mode="csv" style="padding: 4px 8px;">CSV</button>
-                      <button class="log-filter-btn" data-json-mode="yaml" style="padding: 4px 8px;">YAML</button>
+                    <div class="converters-btn-group" style="display: flex; gap: 4px; flex-wrap: wrap;">
+                      <button class="log-filter-btn active log-info" data-json-mode="csv" style="padding: 4px 8px;">JSON ➔ CSV</button>
+                      <button class="log-filter-btn" data-json-mode="csv-to-json" style="padding: 4px 8px;">CSV ➔ JSON</button>
+                      <button class="log-filter-btn" data-json-mode="yaml" style="padding: 4px 8px;">JSON ➔ YAML</button>
+                      <button class="log-filter-btn" data-json-mode="yaml-to-json" style="padding: 4px 8px;">YAML ➔ JSON</button>
+                      <button class="log-filter-btn" data-json-mode="xml" style="padding: 4px 8px;">JSON ➔ XML</button>
                       <button class="log-filter-btn" data-json-mode="ts" style="padding: 4px 8px;">TS Interface</button>
                     </div>
                   </div>
 
                   <div style="display: flex; align-items: center; gap: 8px;">
-                    <input type="text" id="json-query-input" class="input-text" style="flex: 1; padding: 5px 10px; font-size: 0.76rem;" placeholder="JSONPath Filter (e.g. $.author.name or $.tags[0])...">
+                    <input type="text" id="json-query-input" class="input-text" style="flex: 1; padding: 5px 10px; font-size: 0.76rem;" placeholder="JSONPath Query (e.g. $.author.name or $.tags[0])...">
                     <button class="log-filter-btn" id="json-query-btn" style="padding: 5px 10px;">Query</button>
                   </div>
 
                   <div>
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                      <span style="font-weight: 700; font-size: 0.8rem; color: var(--text-main);">Output</span>
-                      <button class="url-action-icon-btn" id="json-copy-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                      <span style="font-weight: 700; font-size: 0.8rem; color: var(--text-main);">Converted Output</span>
+                      <div style="display: flex; gap: 6px;">
+                        <button class="log-filter-btn" onclick="JsonTool.downloadConvertedOutput()" style="padding: 3px 6px; font-size: 0.72rem;">Download</button>
+                        <button class="url-action-icon-btn" id="json-copy-btn" title="Copy Output"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                      </div>
                     </div>
                     <textarea id="json-output" class="code-textarea" style="height: 250px; font-size: 0.78rem;" readonly placeholder="Conversion output..."></textarea>
                   </div>
@@ -945,7 +1045,7 @@
                   <div class="url-card" style="padding: 16px;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
                       <span id="file-b64-payload-label" style="font-weight: 700; font-size: 0.82rem; color: var(--text-main);">Base64 Payload / Data URI</span>
-                      <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('b64-out-datauri').value, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                      <button id="b64-copy-payload-btn" class="url-action-icon-btn" onclick="FileBase64Tool.copySnippet('payload', this)" title="Copy Full Base64 Payload"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
                     </div>
                     <textarea id="b64-out-datauri" class="code-textarea" rows="6" readonly style="font-family: var(--font-mono); font-size: 0.76rem;"></textarea>
                   </div>
@@ -1799,12 +1899,12 @@
           </div>
         </section>
 
-        <!-- 13. Text Diff (Beyond Compare Live Side-by-Side Suite) -->
+        <!-- 13. Text Diff (Live Side-by-Side Comparison Suite) -->
         <section id="view-text-diff" class="tool-view">
           <div class="tool-header">
             <div>
               <h1 class="tool-title">Text & Code Diff Checker</h1>
-              <p class="tool-subtitle">Beyond Compare style live real-time side-by-side comparison editor with live syntax & character diffing.</p>
+              <p class="tool-subtitle">Live real-time side-by-side comparison editor with syntax & character diffing.</p>
             </div>
             <div class="tool-actions">
               <button class="btn btn-secondary" id="diff-sample-btn">Sample Diff</button>
@@ -1817,35 +1917,35 @@
           </div>
 
 
-          <!-- Beyond Compare Control Toolbar -->
-          <div class="bc-toolbar">
+          <!-- Diff Control Toolbar -->
+          <div class="diff-toolbar">
             <!-- View Mode Switcher -->
-            <div class="bc-toolbar-group">
-              <span class="bc-toolbar-label">View:</span>
-              <div class="bc-btn-group">
-                <button class="bc-toggle-btn active" data-diff-view="split" title="Side-by-Side Split View">Side-by-Side</button>
-                <button class="bc-toggle-btn" data-diff-view="left" title="View Stream A Only">Stream A</button>
-                <button class="bc-toggle-btn" data-diff-view="right" title="View Stream B Only">Stream B</button>
-                <button class="bc-toggle-btn" data-diff-view="unified" title="Unified Patch View">Unified</button>
+            <div class="diff-toolbar-group">
+              <span class="diff-toolbar-label">View:</span>
+              <div class="diff-btn-group">
+                <button class="diff-toggle-btn active" data-diff-view="split" title="Side-by-Side Split View">Side-by-Side</button>
+                <button class="diff-toggle-btn" data-diff-view="left" title="View Stream A Only">Stream A</button>
+                <button class="diff-toggle-btn" data-diff-view="right" title="View Stream B Only">Stream B</button>
+                <button class="diff-toggle-btn" data-diff-view="unified" title="Unified Patch View">Unified</button>
               </div>
             </div>
 
             <!-- Filter Switcher -->
-            <div class="bc-toolbar-group">
-              <span class="bc-toolbar-label">Filter:</span>
-              <div class="bc-btn-group">
-                <button class="bc-toggle-btn active" data-diff-filter="all" title="Show All Lines">All Lines</button>
-                <button class="bc-toggle-btn" data-diff-filter="diffs" title="Show Differences Only">Diffs Only</button>
-                <button class="bc-toggle-btn" data-diff-filter="matches" title="Show Matching Lines Only">Matches</button>
+            <div class="diff-toolbar-group">
+              <span class="diff-toolbar-label">Filter:</span>
+              <div class="diff-btn-group">
+                <button class="diff-toggle-btn active" data-diff-filter="all" title="Show All Lines">All Lines</button>
+                <button class="diff-toggle-btn" data-diff-filter="diffs" title="Show Differences Only">Diffs Only</button>
+                <button class="diff-toggle-btn" data-diff-filter="matches" title="Show Matching Lines Only">Matches</button>
               </div>
             </div>
 
             <!-- Difference Navigation -->
-            <div class="bc-toolbar-group">
-              <span class="bc-toolbar-label">Jump:</span>
-              <div class="bc-btn-group">
-                <button class="bc-toggle-btn" id="diff-prev-btn" title="Jump to Previous Difference">▲ Prev Diff</button>
-                <button class="bc-toggle-btn" id="diff-next-btn" title="Jump to Next Difference">▼ Next Diff</button>
+            <div class="diff-toolbar-group">
+              <span class="diff-toolbar-label">Jump:</span>
+              <div class="diff-btn-group">
+                <button class="diff-toggle-btn" id="diff-prev-btn" title="Jump to Previous Difference">▲ Prev Diff</button>
+                <button class="diff-toggle-btn" id="diff-next-btn" title="Jump to Next Difference">▼ Next Diff</button>
               </div>
             </div>
           </div>
@@ -1859,20 +1959,20 @@
               <span class="diff-stat-eq" id="diff-stat-eq">= 0 Unchanged</span>
             </div>
             <div class="diff-stats-match">
-              <span class="bc-match-badge bc-match-100" id="diff-stat-match">100% Match</span>
+              <span class="diff-match-badge diff-match-100" id="diff-stat-match">100% Match</span>
             </div>
           </div>
 
-          <!-- Beyond Compare Live Side-by-Side Comparison Workspace -->
-          <div class="bc-sbs-container" id="diff-sbs-container">
+          <!-- Live Side-by-Side Comparison Workspace -->
+          <div class="diff-sbs-container" id="diff-sbs-container">
             <!-- Left Stream (Original) -->
-            <div class="bc-editor-card" id="diff-card-left">
-              <div class="bc-editor-header">
-                <div class="bc-editor-title-wrap">
-                  <span class="bc-stream-badge bc-badge-left">A</span>
-                  <span class="bc-editor-title">Stream A (Original)</span>
+            <div class="diff-editor-card" id="diff-card-left">
+              <div class="diff-editor-header">
+                <div class="diff-editor-title-wrap">
+                  <span class="diff-stream-badge diff-badge-left">A</span>
+                  <span class="diff-editor-title">Stream A (Original)</span>
                 </div>
-                <div class="bc-editor-actions">
+                <div class="diff-editor-actions">
                   <label class="url-action-icon-btn" title="Load local file into Stream A">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     <input type="file" id="diff-file-input-left" accept=".txt,.js,.ts,.html,.css,.json,.log,.py,.md,.yml,.xml" style="display: none;">
@@ -1888,23 +1988,23 @@
                   </button>
                 </div>
               </div>
-              <div class="bc-editor-viewport">
-                <div class="bc-gutter" id="diff-gutter-left"></div>
-                <div class="bc-code-stage">
-                  <div class="bc-backdrop" id="diff-backdrop-left"></div>
-                  <textarea id="diff-text-left" class="bc-live-textarea" spellcheck="false" placeholder="Type or paste original text here..."></textarea>
+              <div class="diff-editor-viewport">
+                <div class="diff-gutter" id="diff-gutter-left"></div>
+                <div class="diff-code-stage">
+                  <div class="diff-backdrop" id="diff-backdrop-left"></div>
+                  <textarea id="diff-text-left" class="diff-live-textarea" spellcheck="false" placeholder="Type or paste original text here..."></textarea>
                 </div>
               </div>
             </div>
 
             <!-- Right Stream (Modified) -->
-            <div class="bc-editor-card" id="diff-card-right">
-              <div class="bc-editor-header">
-                <div class="bc-editor-title-wrap">
-                  <span class="bc-stream-badge bc-badge-right">B</span>
-                  <span class="bc-editor-title">Stream B (Modified)</span>
+            <div class="diff-editor-card" id="diff-card-right">
+              <div class="diff-editor-header">
+                <div class="diff-editor-title-wrap">
+                  <span class="diff-stream-badge diff-badge-right">B</span>
+                  <span class="diff-editor-title">Stream B (Modified)</span>
                 </div>
-                <div class="bc-editor-actions">
+                <div class="diff-editor-actions">
                   <label class="url-action-icon-btn" title="Load local file into Stream B">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     <input type="file" id="diff-file-input-right" accept=".txt,.js,.ts,.html,.css,.json,.log,.py,.md,.yml,.xml" style="display: none;">
@@ -1920,20 +2020,20 @@
                   </button>
                 </div>
               </div>
-              <div class="bc-editor-viewport">
-                <div class="bc-gutter" id="diff-gutter-right"></div>
-                <div class="bc-code-stage">
-                  <div class="bc-backdrop" id="diff-backdrop-right"></div>
-                  <textarea id="diff-text-right" class="bc-live-textarea" spellcheck="false" placeholder="Type or paste modified text here..."></textarea>
+              <div class="diff-editor-viewport">
+                <div class="diff-gutter" id="diff-gutter-right"></div>
+                <div class="diff-code-stage">
+                  <div class="diff-backdrop" id="diff-backdrop-right"></div>
+                  <textarea id="diff-text-right" class="diff-live-textarea" spellcheck="false" placeholder="Type or paste modified text here..."></textarea>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Beyond Compare Active Line Detail Comparison Pane -->
-          <div class="bc-line-detail-panel" id="diff-line-detail-panel" style="margin-top: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 8px 12px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6;">
+          <!-- Active Line Detail Comparison Pane -->
+          <div class="diff-line-detail-panel" id="diff-line-detail-panel" style="margin-top: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 8px 12px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6;">
             <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 4px; display: flex; justify-content: space-between;">
-              <span>Beyond Compare Line Difference Inspector</span>
+              <span>Line Difference Inspector</span>
               <span id="diff-detail-line-num">Cursor on Line 1</span>
             </div>
             <div id="diff-detail-row-left" style="display: flex; align-items: baseline; gap: 8px; overflow-x: auto; white-space: pre; padding: 2px 4px; border-radius: 4px; background: var(--bg-pane); margin-bottom: 2px;">
@@ -1948,11 +2048,11 @@
 
 
           <!-- Unified Patch View (Toggled when Unified mode active) -->
-          <div class="bc-unified-card" id="diff-card-unified" style="display: none;">
-            <div class="bc-editor-header">
-              <span class="bc-editor-title">Unified Comparison Patch</span>
+          <div class="diff-unified-card" id="diff-card-unified" style="display: none;">
+            <div class="diff-editor-header">
+              <span class="diff-editor-title">Unified Comparison Patch</span>
             </div>
-            <div class="bc-unified-panel" id="diff-unified-panel"></div>
+            <div class="diff-unified-panel" id="diff-unified-panel"></div>
           </div>
         </section>
 

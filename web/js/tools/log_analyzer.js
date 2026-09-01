@@ -167,34 +167,42 @@ const LogTool = {
     // Sort alphabetically
     list.sort((a, b) => a.name.localeCompare(b));
 
-    for (const file of list) {
+    Perf.showProgressBar('log-output-view', 10, true);
+
+    for (let i = 0; i < list.length; i++) {
+      const file = list[i];
       const text = await this.readText(file);
       this.activeFiles.push({
         name: file.name,
         size: file.size,
         lines: text.split('\n')
       });
+      Perf.showProgressBar('log-output-view', Math.round(((i + 1) / list.length) * 50));
+      await new Promise(r => setTimeout(r, 0));
     }
 
-    this.parseActiveFiles();
+    await this.parseActiveFiles();
+    Perf.hideProgressBar('log-output-view');
     App.showToast(`Successfully imported ${list.length} log file(s)`);
   },
 
   readText(file) {
     return new Promise((resolve) => {
       const r = new FileReader();
-      r.onload = (e) => resolve(e.target.result);
+      r.onload = (e) => resolve(e.target.result || '');
       r.onerror = () => resolve('');
       r.readAsText(file);
     });
   },
 
-  parseActiveFiles() {
+  async parseActiveFiles() {
     this.parsedLines = [];
     
-    this.activeFiles.forEach(file => {
-      file.lines.forEach((line, idx) => {
-        if (!line.trim()) return;
+    for (const file of this.activeFiles) {
+      const total = file.lines.length;
+      for (let idx = 0; idx < total; idx++) {
+        const line = file.lines[idx];
+        if (!line.trim()) continue;
 
         const upper = line.toUpperCase();
         let severity = 'other';
@@ -210,8 +218,13 @@ const LogTool = {
           text: line,
           severity
         });
-      });
-    });
+
+        // Yield to event loop every 10,000 lines on large logs
+        if (idx % 10000 === 0 && idx > 0) {
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+    }
 
     // Automatically make all filter toggles active on file load
     ['error', 'warn', 'info', 'debug', 'trace', 'other'].forEach(sev => {

@@ -1,4 +1,4 @@
-// Text Diff Tool — Beyond Compare Style Side-by-Side Real-Time Diff Editor
+// Text Diff Tool — Side-by-Side Real-Time Diff Editor
 const TextDiffTool = {
   activeView: 'split', // 'split', 'left', 'right', 'unified'
   activeFilter: 'all', // 'all', 'diffs', 'matches'
@@ -66,7 +66,7 @@ const TextDiffTool = {
     this.leftEditor.addEventListener('input', debouncedCompare);
     this.rightEditor.addEventListener('input', debouncedCompare);
 
-    // Track active line on click/keyup for Beyond Compare line detail inspector
+    // Track active line on click/keyup for line detail inspector
     const trackCursor = (textarea, side) => {
       const pos = textarea.selectionStart;
       const textBefore = textarea.value.substring(0, pos);
@@ -124,7 +124,7 @@ const TextDiffTool = {
     if (this.sampleBtn) {
       this.sampleBtn.addEventListener('click', () => {
         this.loadSample();
-        if (window.App && App.showToast) App.showToast('Beyond Compare sample diff loaded');
+        if (window.App && App.showToast) App.showToast('Sample diff loaded');
       });
     }
 
@@ -344,7 +344,7 @@ const TextDiffTool = {
 
   loadSample() {
     if (!this.leftEditor || !this.rightEditor) return;
-    this.leftEditor.value = `// Beyond Compare Live Diff Demo - Stream A
+    this.leftEditor.value = `// Live Diff Demo - Stream A
 function calculateInvoiceTotal(items, discountRate, taxPercent) {
   let subtotal = 0;
   for (let i = 0; i < items.length; i++) {
@@ -370,7 +370,7 @@ function calculateInvoiceTotal(items, discountRate, taxPercent) {
 
 module.exports = { calculateInvoiceTotal };`;
 
-    this.rightEditor.value = `// Beyond Compare Live Diff Demo - Stream B (Enhanced)
+    this.rightEditor.value = `// Live Diff Demo - Stream B (Enhanced)
 function calculateInvoiceTotal(items = [], discountRate = 0, taxPercent = 0) {
   if (!Array.isArray(items) || items.length === 0) {
     return { subtotal: '0.00', discount: '0.00', tax: '0.00', total: '0.00' };
@@ -391,7 +391,7 @@ function calculateInvoiceTotal(items = [], discountRate = 0, taxPercent = 0) {
     discount: discount.toFixed(2),
     tax: tax.toFixed(2),
     total: grandTotal.toFixed(2),
-    currency: 'USD'
+    itemCount: items.length
   };
 }
 
@@ -423,11 +423,11 @@ module.exports = { calculateInvoiceTotal };`;
     const rightVal = this.rightEditor.value;
 
     if (!leftVal && !rightVal) {
-      if (this.leftGutter) this.leftGutter.innerHTML = '<div class="bc-gutter-row bc-gutter-eq"><span class="bc-line-num">1</span><span class="bc-diff-sign">=</span></div>';
-      if (this.rightGutter) this.rightGutter.innerHTML = '<div class="bc-gutter-row bc-gutter-eq"><span class="bc-line-num">1</span><span class="bc-diff-sign">=</span></div>';
-      if (this.leftBackdrop) this.leftBackdrop.innerHTML = '<div class="bc-line-row bc-line-eq"></div>';
-      if (this.rightBackdrop) this.rightBackdrop.innerHTML = '<div class="bc-line-row bc-line-eq"></div>';
-      if (this.unifiedPanel) this.unifiedPanel.innerHTML = '<div class="bc-empty-msg">Type or paste text in Stream A & Stream B, or click "Sample Diff" above.</div>';
+      if (this.leftGutter) this.leftGutter.innerHTML = '<div class="diff-gutter-row diff-gutter-eq"><span class="diff-line-num">1</span><span class="diff-diff-sign">=</span></div>';
+      if (this.rightGutter) this.rightGutter.innerHTML = '<div class="diff-gutter-row diff-gutter-eq"><span class="diff-line-num">1</span><span class="diff-diff-sign">=</span></div>';
+      if (this.leftBackdrop) this.leftBackdrop.innerHTML = '<div class="diff-line-row diff-line-eq"></div>';
+      if (this.rightBackdrop) this.rightBackdrop.innerHTML = '<div class="diff-line-row diff-line-eq"></div>';
+      if (this.unifiedPanel) this.unifiedPanel.innerHTML = '<div class="diff-empty-msg">Type or paste text in Stream A & Stream B, or click "Sample Diff" above.</div>';
       this.updateStats(0, 0, 0, 0);
       this.updateLineDetail(0);
       return;
@@ -465,7 +465,7 @@ module.exports = { calculateInvoiceTotal };`;
         if (rIdx < rightStatus.length) rightStatus[rIdx] = 'eq';
 
         const esc = this.escape(op.text);
-        unifiedHtml += `<div class="bc-unified-row bc-unified-eq"><span class="bc-un-num">${lIdx + 1}</span><span class="bc-un-num">${rIdx + 1}</span><span class="bc-un-sign"> </span><code>${esc || '&nbsp;'}</code></div>`;
+        unifiedHtml += `<div class="diff-unified-row diff-unified-eq"><span class="diff-un-num">${lIdx + 1}</span><span class="diff-un-num">${rIdx + 1}</span><span class="diff-un-sign"> </span><code>${esc || '&nbsp;'}</code></div>`;
 
         lIdx++;
         rIdx++;
@@ -473,24 +473,24 @@ module.exports = { calculateInvoiceTotal };`;
         delCount++;
         if (lIdx < leftStatus.length) {
           leftStatus[lIdx] = 'del';
-          leftWordDiffs[lIdx] = `<mark class="bc-diff-del-word">${this.escape(op.left)}</mark>`;
+          leftWordDiffs[lIdx] = `<mark class="diff-diff-del-word">${this.escape(op.left)}</mark>`;
         }
         this.diffLineIndices.push(lIdx);
 
         const esc = this.escape(op.left);
-        unifiedHtml += `<div class="bc-unified-row bc-unified-del"><span class="bc-un-num">${lIdx + 1}</span><span class="bc-un-num"></span><span class="bc-un-sign">−</span><code>${esc || '&nbsp;'}</code></div>`;
+        unifiedHtml += `<div class="diff-unified-row diff-unified-del"><span class="diff-un-num">${lIdx + 1}</span><span class="diff-un-num"></span><span class="diff-un-sign">−</span><code>${esc || '&nbsp;'}</code></div>`;
 
         lIdx++;
       } else if (op.type === 'add') {
         addCount++;
         if (rIdx < rightStatus.length) {
           rightStatus[rIdx] = 'add';
-          rightWordDiffs[rIdx] = `<mark class="bc-diff-add-word">${this.escape(op.right)}</mark>`;
+          rightWordDiffs[rIdx] = `<mark class="diff-diff-add-word">${this.escape(op.right)}</mark>`;
         }
         this.diffLineIndices.push(rIdx);
 
         const esc = this.escape(op.right);
-        unifiedHtml += `<div class="bc-unified-row bc-unified-add"><span class="bc-un-num"></span><span class="bc-un-num">${rIdx + 1}</span><span class="bc-un-sign">+</span><code>${esc || '&nbsp;'}</code></div>`;
+        unifiedHtml += `<div class="diff-unified-row diff-unified-add"><span class="diff-un-num"></span><span class="diff-un-num">${rIdx + 1}</span><span class="diff-un-sign">+</span><code>${esc || '&nbsp;'}</code></div>`;
 
         rIdx++;
       } else if (op.type === 'mod') {
@@ -507,15 +507,15 @@ module.exports = { calculateInvoiceTotal };`;
         }
         this.diffLineIndices.push(lIdx);
 
-        unifiedHtml += `<div class="bc-unified-row bc-unified-del"><span class="bc-un-num">${lIdx + 1}</span><span class="bc-un-num"></span><span class="bc-un-sign">−</span><code>${wordDiff.left || '&nbsp;'}</code></div>`;
-        unifiedHtml += `<div class="bc-unified-row bc-unified-add"><span class="bc-un-num"></span><span class="bc-un-num">${rIdx + 1}</span><span class="bc-un-sign">+</span><code>${wordDiff.right || '&nbsp;'}</code></div>`;
+        unifiedHtml += `<div class="diff-unified-row diff-unified-del"><span class="diff-un-num">${lIdx + 1}</span><span class="diff-un-num"></span><span class="diff-un-sign">−</span><code>${wordDiff.left || '&nbsp;'}</code></div>`;
+        unifiedHtml += `<div class="diff-unified-row diff-unified-add"><span class="diff-un-num"></span><span class="diff-un-num">${rIdx + 1}</span><span class="diff-un-sign">+</span><code>${wordDiff.right || '&nbsp;'}</code></div>`;
 
         lIdx++;
         rIdx++;
       }
     });
 
-    // 1-to-1 Left Gutter and Backdrop Rows with Beyond Compare word highlighting
+    // 1-to-1 Left Gutter and Backdrop Rows with syntax & character word highlighting
     let leftGutterHtml = '';
     let leftBackdropHtml = '';
     const leftCount = Math.max(1, leftLines.length);
@@ -523,11 +523,11 @@ module.exports = { calculateInvoiceTotal };`;
       const status = leftLines.length > 0 ? (leftStatus[i] || 'eq') : 'eq';
       const sign = status === 'del' ? '−' : status === 'mod' ? '~' : '=';
       const content = leftWordDiffs[i] || this.escape(leftLines[i] || '');
-      leftGutterHtml += `<div class="bc-gutter-row bc-gutter-${status}"><span class="bc-line-num">${i + 1}</span><span class="bc-diff-sign">${sign}</span></div>`;
-      leftBackdropHtml += `<div class="bc-line-row bc-line-${status}"><span class="bc-line-content">${content || '&nbsp;'}</span></div>`;
+      leftGutterHtml += `<div class="diff-gutter-row diff-gutter-${status}"><span class="diff-line-num">${i + 1}</span><span class="diff-diff-sign">${sign}</span></div>`;
+      leftBackdropHtml += `<div class="diff-line-row diff-line-${status}"><span class="diff-line-content">${content || '&nbsp;'}</span></div>`;
     }
 
-    // 1-to-1 Right Gutter and Backdrop Rows with Beyond Compare word highlighting
+    // 1-to-1 Right Gutter and Backdrop Rows with syntax & character word highlighting
     let rightGutterHtml = '';
     let rightBackdropHtml = '';
     const rightCount = Math.max(1, rightLines.length);
@@ -535,8 +535,8 @@ module.exports = { calculateInvoiceTotal };`;
       const status = rightLines.length > 0 ? (rightStatus[j] || 'eq') : 'eq';
       const sign = status === 'add' ? '+' : status === 'mod' ? '~' : '=';
       const content = rightWordDiffs[j] || this.escape(rightLines[j] || '');
-      rightGutterHtml += `<div class="bc-gutter-row bc-gutter-${status}"><span class="bc-line-num">${j + 1}</span><span class="bc-diff-sign">${sign}</span></div>`;
-      rightBackdropHtml += `<div class="bc-line-row bc-line-${status}"><span class="bc-line-content">${content || '&nbsp;'}</span></div>`;
+      rightGutterHtml += `<div class="diff-gutter-row diff-gutter-${status}"><span class="diff-line-num">${j + 1}</span><span class="diff-diff-sign">${sign}</span></div>`;
+      rightBackdropHtml += `<div class="diff-line-row diff-line-${status}"><span class="diff-line-content">${content || '&nbsp;'}</span></div>`;
     }
 
 
@@ -544,7 +544,7 @@ module.exports = { calculateInvoiceTotal };`;
     if (this.rightGutter) this.rightGutter.innerHTML = rightGutterHtml;
     if (this.leftBackdrop) this.leftBackdrop.innerHTML = leftBackdropHtml;
     if (this.rightBackdrop) this.rightBackdrop.innerHTML = rightBackdropHtml;
-    if (this.unifiedPanel) this.unifiedPanel.innerHTML = unifiedHtml || '<div class="bc-empty-msg">No differences found between streams.</div>';
+    if (this.unifiedPanel) this.unifiedPanel.innerHTML = unifiedHtml || '<div class="diff-empty-msg">No differences found between streams.</div>';
 
     if (isLarge) Perf.hideProgressBar('diff-stats-bar');
 
@@ -552,7 +552,7 @@ module.exports = { calculateInvoiceTotal };`;
     this.updateLineDetail(this._activeLineIdx);
   },
 
-  // Beyond Compare Line-by-Line Word Detail Inspector
+  // Line-by-Line Word Detail Inspector
   updateLineDetail(lineIdx, side = 'left') {
     this._activeLineIdx = lineIdx;
     if (!this.detailLineNum || !this.detailContentLeft || !this.detailContentRight) return;
@@ -584,11 +584,11 @@ module.exports = { calculateInvoiceTotal };`;
     if (this.statMatch) {
       this.statMatch.textContent = `${matchPct}% Match`;
       if (matchPct === 100) {
-        this.statMatch.className = 'bc-match-badge bc-match-100';
+        this.statMatch.className = 'diff-match-badge diff-match-100';
       } else if (matchPct >= 70) {
-        this.statMatch.className = 'bc-match-badge bc-match-high';
+        this.statMatch.className = 'diff-match-badge diff-match-high';
       } else {
-        this.statMatch.className = 'bc-match-badge bc-match-low';
+        this.statMatch.className = 'diff-match-badge diff-match-low';
       }
     }
   },
@@ -708,8 +708,8 @@ module.exports = { calculateInvoiceTotal };`;
   computeWordDiff(oldStr, newStr) {
     const esc = (s) => this.escape(s);
     if (!oldStr && !newStr) return { left: '', right: '' };
-    if (!oldStr) return { left: '', right: `<mark class="bc-diff-add-word">${esc(newStr)}</mark>` };
-    if (!newStr) return { left: `<mark class="bc-diff-del-word">${esc(oldStr)}</mark>`, right: '' };
+    if (!oldStr) return { left: '', right: `<mark class="diff-diff-add-word">${esc(newStr)}</mark>` };
+    if (!newStr) return { left: `<mark class="diff-diff-del-word">${esc(oldStr)}</mark>`, right: '' };
 
     const tokenize = (str) => str.match(/(\s+|[a-zA-Z0-9_]+|[^\s\w])/g) || [];
     const oldTokens = tokenize(oldStr);
@@ -784,9 +784,9 @@ module.exports = { calculateInvoiceTotal };`;
         leftHtml += esc(d.text);
         rightHtml += esc(d.text);
       } else if (d.type === 'del') {
-        leftHtml += `<mark class="bc-diff-del-word" style="background: rgba(239, 68, 68, 0.25); color: #ef4444; font-weight: 700; border-radius: 2px; padding: 1px 2px;">${esc(d.text)}</mark>`;
+        leftHtml += `<mark class="diff-diff-del-word" style="background: rgba(239, 68, 68, 0.25); color: #ef4444; font-weight: 700; border-radius: 2px; padding: 1px 2px;">${esc(d.text)}</mark>`;
       } else if (d.type === 'add') {
-        rightHtml += `<mark class="bc-diff-add-word" style="background: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; border-radius: 2px; padding: 1px 2px;">${esc(d.text)}</mark>`;
+        rightHtml += `<mark class="diff-diff-add-word" style="background: rgba(16, 185, 129, 0.25); color: #10b981; font-weight: 700; border-radius: 2px; padding: 1px 2px;">${esc(d.text)}</mark>`;
       }
     });
 
