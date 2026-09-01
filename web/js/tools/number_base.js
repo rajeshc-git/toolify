@@ -20,7 +20,20 @@ const NumberBaseTool = {
     this.clearAll();
   },
 
+  loadPreset(val, btnEl) {
+    document.querySelectorAll('#view-number-base .pwd-preset-chip').forEach(c => c.classList.remove('active'));
+    if (btnEl) btnEl.classList.add('active');
+
+    const decInput = document.getElementById('base-dec');
+    if (decInput) {
+      decInput.value = val;
+      this.fromDec(val);
+    }
+  },
+
   clearAll() {
+    document.querySelectorAll('#view-number-base .pwd-preset-chip').forEach(c => c.classList.remove('active'));
+
     const dec = document.getElementById('base-dec');
     const hex = document.getElementById('base-hex');
     const bin = document.getElementById('base-bin');

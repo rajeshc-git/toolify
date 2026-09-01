@@ -129,10 +129,11 @@ with open(css_path, 'r', encoding='utf-8') as f:
     css = f.read()
 
 js_content = ""
-vendor_lib = os.path.join(vendor_dir, 'pdf-lib.min.js')
-if os.path.exists(vendor_lib):
-    with open(vendor_lib, 'r', encoding='utf-8') as f:
-        js_content += "\n/* Vendor: pdf-lib.min.js */\n" + f.read()
+for vf in ['jszip.min.js', 'pdf.min.js', 'pdf-lib.min.js']:
+    vpath = os.path.join(vendor_dir, vf)
+    if os.path.exists(vpath):
+        with open(vpath, 'r', encoding='utf-8') as f:
+            js_content += f"\n/* Vendor: {vf} */\n" + f.read()
 
 for tf in sorted(os.listdir(tools_dir)):
     if tf.endswith('.js'):
@@ -142,10 +143,10 @@ for tf in sorted(os.listdir(tools_dir)):
 with open(app_js_path, 'r', encoding='utf-8') as f:
     js_content += "\n/* App Core */\n" + f.read()
 
-html = html.replace('<link rel="stylesheet" href="styles.css">', f'<style>\n{css}\n</style>')
-html = re.sub(r'<script src="js/vendor/[^"]+"></script>\s*', '', html)
-html = re.sub(r'<script src="js/tools/[^"]+"></script>\s*', '', html)
-html = html.replace('<script src="app.js?v=2.0.1"></script>', f'<script>\n{js_content}\n</script>')
+html = re.sub(r'<link\s+rel="stylesheet"\s+href="styles\.css(?:\?[^"]*)?">', lambda m: f'<style>\n{css}\n</style>', html)
+html = re.sub(r'<script\s+src="js/vendor/[^"]+"></script>\s*', '', html)
+html = re.sub(r'<script\s+src="js/tools/[^"]+"></script>\s*', '', html)
+html = re.sub(r'<script\s+src="app\.js(?:\?[^"]*)?"></script>', lambda m: f'<script>\n{js_content}\n</script>', html)
 
 html_bytes = html.encode('utf-8')
 b64_html = base64.b64encode(html_bytes).decode('ascii')

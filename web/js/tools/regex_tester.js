@@ -70,17 +70,11 @@ and tabs\t\tare here.`
     const pattern = document.getElementById('regex-pattern');
     const flags = document.getElementById('regex-flags');
     const sample = document.getElementById('regex-sample-text');
-    const sampleBtn = document.getElementById('regex-sample-btn');
     const clearBtn = document.getElementById('regex-clear-btn');
     const fileInput = document.getElementById('regex-file-input');
     const copySampleBtn = document.getElementById('regex-copy-sample-btn');
 
     if (!pattern) return;
-
-    // Default sample email setup
-    if (sampleBtn) {
-      sampleBtn.addEventListener('click', () => this.applyPreset('email'));
-    }
 
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {

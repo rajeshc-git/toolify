@@ -79,20 +79,21 @@ const TextDiffTool = {
     this.rightEditor.addEventListener('keyup', () => trackCursor(this.rightEditor, 'right'));
     this.rightEditor.addEventListener('click', () => trackCursor(this.rightEditor, 'right'));
 
-    // Tab Key Indentation
-    const handleKeydown = (e, textarea) => {
+    // Tab Key: Navigate cursor smoothly between Left and Right editor sides
+    const handleKeydown = (e, side) => {
       if (e.key === 'Tab') {
-        e.preventDefault();
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        textarea.value = textarea.value.substring(0, start) + '  ' + textarea.value.substring(end);
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
-        this.compare();
+        if (!e.shiftKey && side === 'left') {
+          e.preventDefault();
+          this.rightEditor.focus();
+        } else if (e.shiftKey && side === 'right') {
+          e.preventDefault();
+          this.leftEditor.focus();
+        }
       }
     };
 
-    this.leftEditor.addEventListener('keydown', (e) => handleKeydown(e, this.leftEditor));
-    this.rightEditor.addEventListener('keydown', (e) => handleKeydown(e, this.rightEditor));
+    this.leftEditor.addEventListener('keydown', (e) => handleKeydown(e, 'left'));
+    this.rightEditor.addEventListener('keydown', (e) => handleKeydown(e, 'right'));
 
     // Fullscreen Toggles (Toggles both Left & Right streams side-by-side)
     if (this.btnFullscreenLeft) {
@@ -106,11 +107,22 @@ const TextDiffTool = {
       mainFsBtn.addEventListener('click', () => this.toggleFullscreen());
     }
 
+    // Native browser fullscreen change synchronization
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        this.exitFullscreen(false);
+      } else {
+        const sbs = document.getElementById('diff-sbs-container');
+        const unified = document.getElementById('diff-card-unified');
+        const targetEl = this.activeView === 'unified' ? unified : sbs;
+        this.enterFullscreen(targetEl, false);
+      }
+    });
 
     // Exit fullscreen on Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        this.exitFullscreen();
+        this.exitFullscreen(true);
       }
     });
 
@@ -210,40 +222,56 @@ const TextDiffTool = {
       });
     }
     if (this.downloadLeft) {
-      this.downloadLeft.addEventListener('click', () => this.triggerDownload(this.leftEditor.value, 'original_left.txt'));
+      this.downloadLeft.addEventListener('click', () => this.triggerDownload(this.leftEditor.value, 'stream_a.txt'));
     }
     if (this.downloadRight) {
-      this.downloadRight.addEventListener('click', () => this.triggerDownload(this.rightEditor.value, 'modified_right.txt'));
+      this.downloadRight.addEventListener('click', () => this.triggerDownload(this.rightEditor.value, 'stream_b.txt'));
     }
   },
 
   toggleFullscreen() {
     const sbs = document.getElementById('diff-sbs-container');
     const unified = document.getElementById('diff-card-unified');
-    const btnL = document.getElementById('diff-fullscreen-left');
-    const btnR = document.getElementById('diff-fullscreen-right');
-    const btnMain = document.getElementById('diff-fullscreen-main-btn');
-
     const targetEl = this.activeView === 'unified' ? unified : sbs;
     if (!targetEl) return;
 
-    const isMax = targetEl.classList.contains('fullscreen-maximized');
-
-    const iconExpand = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>`;
-    const iconCompress = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>`;
+    const isMax = targetEl.classList.contains('fullscreen-maximized') || !!document.fullscreenElement;
 
     if (isMax) {
-      this.exitFullscreen();
+      this.exitFullscreen(true);
     } else {
-      targetEl.classList.add('fullscreen-maximized');
-      if (btnL) { btnL.innerHTML = iconCompress; btnL.title = 'Exit Fullscreen (Esc)'; }
-      if (btnR) { btnR.innerHTML = iconCompress; btnR.title = 'Exit Fullscreen (Esc)'; }
-      if (btnMain) { btnMain.innerHTML = `⛶ Exit Fullscreen`; }
-      if (window.App && App.showToast) App.showToast('Side-by-Side Comparison Maximized to Full Screen (Press Esc to Exit)');
+      this.enterFullscreen(targetEl, true);
     }
   },
 
-  exitFullscreen() {
+  enterFullscreen(targetEl, requestNative = true) {
+    const sbs = document.getElementById('diff-sbs-container');
+    const unified = document.getElementById('diff-card-unified');
+    const el = targetEl || (this.activeView === 'unified' ? unified : sbs);
+    if (!el) return;
+
+    const btnL = document.getElementById('diff-fullscreen-left');
+    const btnR = document.getElementById('diff-fullscreen-right');
+    const btnMain = document.getElementById('diff-fullscreen-main-btn');
+    const iconCompress = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>`;
+
+    el.classList.add('fullscreen-maximized');
+    if (btnL) { btnL.innerHTML = iconCompress; btnL.title = 'Exit Fullscreen (Esc)'; }
+    if (btnR) { btnR.innerHTML = iconCompress; btnR.title = 'Exit Fullscreen (Esc)'; }
+    if (btnMain) { btnMain.innerHTML = `⛶ Exit Fullscreen`; }
+
+    if (requestNative && !document.fullscreenElement) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    }
+
+    if (window.App && App.showToast) App.showToast('Fullscreen Comparison Mode Active (Press Esc to Exit)');
+  },
+
+  exitFullscreen(exitNative = true) {
     const sbs = document.getElementById('diff-sbs-container');
     const unified = document.getElementById('diff-card-unified');
     const btnL = document.getElementById('diff-fullscreen-left');
@@ -254,9 +282,13 @@ const TextDiffTool = {
 
     if (sbs) sbs.classList.remove('fullscreen-maximized');
     if (unified) unified.classList.remove('fullscreen-maximized');
-    if (btnL) { btnL.innerHTML = iconExpand; btnL.title = 'Fullscreen Both Streams'; }
-    if (btnR) { btnR.innerHTML = iconExpand; btnR.title = 'Fullscreen Both Streams'; }
+    if (btnL) { btnL.innerHTML = iconExpand; btnL.title = 'Fullscreen Comparison'; }
+    if (btnR) { btnR.innerHTML = iconExpand; btnR.title = 'Fullscreen Comparison'; }
     if (btnMain) { btnMain.innerHTML = `⛶ Fullscreen`; }
+
+    if (exitNative && document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
   },
 
 
@@ -457,6 +489,8 @@ module.exports = { calculateInvoiceTotal };`;
 
     let lIdx = 0;
     let rIdx = 0;
+    let totalMatchedChars = 0;
+    let totalChars = 0;
 
     ops.forEach((op) => {
       if (op.type === 'eq') {
@@ -466,6 +500,10 @@ module.exports = { calculateInvoiceTotal };`;
 
         const esc = this.escape(op.text);
         unifiedHtml += `<div class="diff-unified-row diff-unified-eq"><span class="diff-un-num">${lIdx + 1}</span><span class="diff-un-num">${rIdx + 1}</span><span class="diff-un-sign"> </span><code>${esc || '&nbsp;'}</code></div>`;
+
+        const charLen = Math.max(1, (op.text || '').length);
+        totalMatchedChars += charLen * 2;
+        totalChars += charLen * 2;
 
         lIdx++;
         rIdx++;
@@ -480,6 +518,7 @@ module.exports = { calculateInvoiceTotal };`;
         const esc = this.escape(op.left);
         unifiedHtml += `<div class="diff-unified-row diff-unified-del"><span class="diff-un-num">${lIdx + 1}</span><span class="diff-un-num"></span><span class="diff-un-sign">−</span><code>${esc || '&nbsp;'}</code></div>`;
 
+        totalChars += Math.max(1, (op.left || '').length);
         lIdx++;
       } else if (op.type === 'add') {
         addCount++;
@@ -492,6 +531,7 @@ module.exports = { calculateInvoiceTotal };`;
         const esc = this.escape(op.right);
         unifiedHtml += `<div class="diff-unified-row diff-unified-add"><span class="diff-un-num"></span><span class="diff-un-num">${rIdx + 1}</span><span class="diff-un-sign">+</span><code>${esc || '&nbsp;'}</code></div>`;
 
+        totalChars += Math.max(1, (op.right || '').length);
         rIdx++;
       } else if (op.type === 'mod') {
         modCount++;
@@ -509,6 +549,9 @@ module.exports = { calculateInvoiceTotal };`;
 
         unifiedHtml += `<div class="diff-unified-row diff-unified-del"><span class="diff-un-num">${lIdx + 1}</span><span class="diff-un-num"></span><span class="diff-un-sign">−</span><code>${wordDiff.left || '&nbsp;'}</code></div>`;
         unifiedHtml += `<div class="diff-unified-row diff-unified-add"><span class="diff-un-num"></span><span class="diff-un-num">${rIdx + 1}</span><span class="diff-un-sign">+</span><code>${wordDiff.right || '&nbsp;'}</code></div>`;
+
+        totalMatchedChars += wordDiff.matchedChars * 2;
+        totalChars += (op.left || '').length + (op.right || '').length;
 
         lIdx++;
         rIdx++;
@@ -548,7 +591,15 @@ module.exports = { calculateInvoiceTotal };`;
 
     if (isLarge) Perf.hideProgressBar('diff-stats-bar');
 
-    this.updateStats(addCount, delCount, modCount, eqCount);
+    // Compute true text similarity match percentage
+    let matchPct = 100;
+    if (totalChars > 0) {
+      matchPct = Math.min(100, Math.max(0, Math.round((totalMatchedChars / totalChars) * 100)));
+    } else if (leftVal !== rightVal) {
+      matchPct = 0;
+    }
+
+    this.updateStats(addCount, delCount, modCount, eqCount, matchPct);
     this.updateLineDetail(this._activeLineIdx);
   },
 
@@ -573,20 +624,20 @@ module.exports = { calculateInvoiceTotal };`;
     }
   },
 
-  updateStats(add, del, mod, eq) {
+  updateStats(add, del, mod, eq, matchPct = 100) {
     if (this.statAdd) this.statAdd.textContent = `+ ${add} Added`;
     if (this.statDel) this.statDel.textContent = `− ${del} Removed`;
     if (this.statMod) this.statMod.textContent = `~ ${mod} Modified`;
     if (this.statEq) this.statEq.textContent = `= ${eq} Unchanged`;
 
-    const total = add + del + mod + eq;
-    let matchPct = total === 0 ? 100 : Math.round((eq / total) * 100);
     if (this.statMatch) {
       this.statMatch.textContent = `${matchPct}% Match`;
       if (matchPct === 100) {
         this.statMatch.className = 'diff-match-badge diff-match-100';
       } else if (matchPct >= 70) {
         this.statMatch.className = 'diff-match-badge diff-match-high';
+      } else if (matchPct >= 40) {
+        this.statMatch.className = 'diff-match-badge diff-match-med';
       } else {
         this.statMatch.className = 'diff-match-badge diff-match-low';
       }
@@ -707,9 +758,13 @@ module.exports = { calculateInvoiceTotal };`;
 
   computeWordDiff(oldStr, newStr) {
     const esc = (s) => this.escape(s);
-    if (!oldStr && !newStr) return { left: '', right: '' };
-    if (!oldStr) return { left: '', right: `<mark class="diff-diff-add-word">${esc(newStr)}</mark>` };
-    if (!newStr) return { left: `<mark class="diff-diff-del-word">${esc(oldStr)}</mark>`, right: '' };
+    if (!oldStr && !newStr) return { left: '', right: '', matchedChars: 0, totalChars: 0 };
+    if (!oldStr) return { left: '', right: `<mark class="diff-diff-add-word">${esc(newStr)}</mark>`, matchedChars: 0, totalChars: newStr.length };
+    if (!newStr) return { left: `<mark class="diff-diff-del-word">${esc(oldStr)}</mark>`, right: '', matchedChars: 0, totalChars: oldStr.length };
+
+    if (oldStr === newStr) {
+      return { left: esc(oldStr), right: esc(newStr), matchedChars: oldStr.length, totalChars: oldStr.length };
+    }
 
     const tokenize = (str) => str.match(/(\s+|[a-zA-Z0-9_]+|[^\s\w])/g) || [];
     const oldTokens = tokenize(oldStr);
@@ -778,11 +833,13 @@ module.exports = { calculateInvoiceTotal };`;
 
     let leftHtml = '';
     let rightHtml = '';
+    let matchedChars = 0;
 
     diffs.forEach(d => {
       if (d.type === 'eq') {
         leftHtml += esc(d.text);
         rightHtml += esc(d.text);
+        matchedChars += d.text.length;
       } else if (d.type === 'del') {
         leftHtml += `<mark class="diff-diff-del-word" style="background: rgba(239, 68, 68, 0.25); color: #ef4444; font-weight: 700; border-radius: 2px; padding: 1px 2px;">${esc(d.text)}</mark>`;
       } else if (d.type === 'add') {
@@ -790,7 +847,8 @@ module.exports = { calculateInvoiceTotal };`;
       }
     });
 
-    return { left: leftHtml, right: rightHtml };
+    const totalChars = Math.max(oldStr.length, newStr.length);
+    return { left: leftHtml, right: rightHtml, matchedChars, totalChars };
   },
 
   escape(str) {

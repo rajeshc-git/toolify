@@ -23,7 +23,6 @@ const DocAnalyzerTool = {
     const fileInput = document.getElementById('doc-file-input');
     const clearBtn = document.getElementById('doc-clear-btn');
     const clearBtnTop = document.getElementById('doc-clear-btn-top');
-    const sampleBtn = document.getElementById('doc-sample-btn');
     const searchKeyword = document.getElementById('doc-search-keyword');
 
     const importFilesBtn = document.getElementById('doc-import-files-btn');
@@ -77,7 +76,6 @@ const DocAnalyzerTool = {
     }
 
     // Controls
-    if (sampleBtn) sampleBtn.addEventListener('click', () => this.loadSamples());
     if (clearBtn) clearBtn.addEventListener('click', () => this.clearAll());
     if (clearBtnTop) clearBtnTop.addEventListener('click', () => this.clearAll());
 
@@ -249,46 +247,6 @@ const DocAnalyzerTool = {
     localStorage.removeItem('doc_analyzer_query');
     this.searchDocs();
     App.showToast('Cleared all loaded documents');
-  },
-
-  loadSamples() {
-    this.loadedDocs = [
-      {
-        name: "rajesh-resume-bw.pdf",
-        size: 49868,
-        type: "application/pdf",
-        content: `RAJESH CHOUDHURY Senior Software Engineer (Full Stack & AI)
-Professional Summary: Senior Software Engineer with 6+ years of experience building full-stack web applications, backend systems, and AI-powered tooling. Worked on healthcare, government, and enterprise platforms with focus on scalable APIs, database optimization, and secure system design.
-Core Competencies: Backend Engineering, RAG Pipelines, Microservices Architecture.
-Technical Skills: Go, Python, JavaScript, SQL, Dart, Flutter, C#.`,
-        fileObj: new File([new Uint8Array(49868)], "rajesh-resume-bw.pdf", { type: "application/pdf" })
-      },
-      {
-        name: "Security_Audit_Report.docx",
-        size: 14200,
-        type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        content: `CONFIDENTIAL SECURITY AUDIT REPORT (2026)
-Project: Cloud Infrastructure & API Gateway
-Author: SecOps Team
-Findings:
-- Issue #1: Missing rate limiter on /v1/auth/token endpoint. HIGH severity.
-- Issue #2: Database pool timeout detected under heavy concurrent load (3000ms).
-- Issue #3: JWT tokens missing explicit audience validation. MEDIUM severity.`,
-        fileObj: new File(["DOCX Sample Context"], "Security_Audit_Report.docx", { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" })
-      },
-      {
-        name: "Financial_Transactions_Q3.csv",
-        size: 8900,
-        type: "text/csv",
-        content: `tx_id,user_id,amount,currency,status,gateway
-tx_89124,usr_102,150.00,USD,SUCCESS,stripe
-tx_89125,usr_103,4200.50,EUR,SUCCESS,bank_wire
-tx_89126,usr_104,19.99,USD,FAILED,paypal`,
-        fileObj: new File(["tx_id,user_id,amount"], "Financial_Transactions_Q3.csv", { type: "text/csv" })
-      }
-    ];
-
-    this.searchDocs();
   },
 
   async loadFiles(files) {
@@ -512,6 +470,17 @@ tx_89126,usr_104,19.99,USD,FAILED,paypal`,
   searchDocs() {
     const keywordInput = document.getElementById('doc-search-keyword');
     const query = keywordInput ? keywordInput.value.trim() : '';
+    const keywordCard = document.getElementById('doc-keyword-search-card');
+    const clearBtnTop = document.getElementById('doc-clear-btn-top');
+    const hasDocs = this.loadedDocs.length > 0;
+
+    // Show or hide the Keywords search card based on document presence
+    if (keywordCard) {
+      keywordCard.style.display = hasDocs ? 'block' : 'none';
+    }
+    if (clearBtnTop) {
+      clearBtnTop.style.display = hasDocs ? 'inline-flex' : 'none';
+    }
 
     // Split keywords
     const keywords = query.split(',').map(k => k.trim().toLowerCase()).filter(k => k.length > 0);
@@ -574,8 +543,13 @@ tx_89126,usr_104,19.99,USD,FAILED,paypal`,
 
     if (this.loadedDocs.length === 0) {
       listContainer.innerHTML = `
-        <div style="padding: 1.5rem; text-align: center; color: var(--text-dim); border: 1px dashed var(--border-color); border-radius: var(--radius-lg); font-style: italic;">
-          No documents imported. Drop files, choose folders, or load samples to begin.
+        <div style="padding: 2.5rem 1.5rem; text-align: center; color: var(--text-dim); border: 1.5px dashed var(--border-color); border-radius: var(--radius-lg);">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px; opacity: 0.6;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          <div style="font-weight: 700; font-size: 0.92rem; color: var(--text-main); margin-bottom: 4px;">No documents loaded yet</div>
+          <div style="font-size: 0.78rem; font-style: italic;">Drop files or folders above to begin keyword analysis & deep search.</div>
         </div>
       `;
       return;

@@ -228,16 +228,28 @@ const JsonTool = {
   switchTab(tab) {
     this.currentTab = tab;
     
-    ['editor', 'table', 'visualizer', 'converter'].forEach(t => {
-      const btn = document.getElementById(`json-tab-${t}`);
-      const pane = document.getElementById(`json-pane-${t}`);
-      if (btn) btn.classList.toggle('active', t === tab);
-      if (pane) pane.style.display = t === tab ? 'block' : 'none';
-    });
+    // Top tabs: editor (workspace) vs converter
+    const editorTabBtn = document.getElementById('json-tab-editor');
+    const converterTabBtn = document.getElementById('json-tab-converter');
+    if (editorTabBtn) editorTabBtn.classList.toggle('active', tab !== 'converter');
+    if (converterTabBtn) converterTabBtn.classList.toggle('active', tab === 'converter');
 
-    // Update Action Bar Icons
+    // Panes
+    const editorPane = document.getElementById('json-pane-editor');
+    const tablePane = document.getElementById('json-pane-table');
+    const visualizerPane = document.getElementById('json-pane-visualizer');
+    const converterPane = document.getElementById('json-pane-converter');
+
+    if (editorPane) editorPane.style.display = tab === 'editor' ? 'block' : 'none';
+    if (tablePane) tablePane.style.display = tab === 'table' ? 'block' : 'none';
+    if (visualizerPane) visualizerPane.style.display = tab === 'visualizer' ? 'block' : 'none';
+    if (converterPane) converterPane.style.display = tab === 'converter' ? 'block' : 'none';
+
+    // Toolbar view toggle buttons (Editor / Table / Tree)
+    const editorBtn = document.getElementById('json-btn-view-editor');
     const tblBtn = document.getElementById('json-btn-view-table');
     const treeBtn = document.getElementById('json-btn-view-tree');
+    if (editorBtn) editorBtn.classList.toggle('active', tab === 'editor');
     if (tblBtn) tblBtn.classList.toggle('active', tab === 'table');
     if (treeBtn) treeBtn.classList.toggle('active', tab === 'visualizer');
 

@@ -8,8 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <meta name="description"
     content="20-in-1 Ultra-fast, zero-bloat developer utility suite. 100% offline, client-side, instant and kernel-level efficient.">
-  <!-- 100% Offline Self-Contained Zero-Dependency Mode -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2.1.5">
 </head>
 
 <body>
@@ -702,17 +701,21 @@
         <section id="view-json-tools" class="tool-view">
           <div class="tool-header">
             <div>
-              <h1 class="tool-title">JSON Studio, Table & Schema Workbench</h1>
-              <p class="tool-subtitle">Format, auto-repair, query, render interactive data tables, and convert JSON ↔ CSV, YAML, XML & TypeScript.</p>
+              <h1 class="tool-title">JSON Studio</h1>
+              <p class="tool-subtitle">Format, auto-repair, query, visualize, and convert JSON data.</p>
             </div>
           </div>
           
           <!-- Top Studio Mode Navigation -->
-          <div style="display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; flex-wrap: wrap;">
-            <button class="tab-btn active" id="json-tab-editor" style="font-weight: 700;">{ } Editor & Formatter</button>
-            <button class="tab-btn" id="json-tab-table" style="font-weight: 700;">▦ Table View</button>
-            <button class="tab-btn" id="json-tab-visualizer" style="font-weight: 700;">🌳 Tree Visualizer</button>
-            <button class="tab-btn" id="json-tab-converter" style="font-weight: 700;">🔄 Converters (CSV / YAML / XML)</button>
+          <div class="sb-tabs" style="border-bottom: 1px solid var(--border-color); margin-bottom: 12px; background: var(--bg-card); padding: 4px 8px; border-radius: var(--radius-md);" id="json-studio-tabs">
+            <button class="sb-tab active" id="json-tab-editor" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+              Editor
+            </button>
+            <button class="sb-tab" id="json-tab-converter" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg>
+              Converters
+            </button>
           </div>
 
           <div class="tool-grid-2col" style="display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 20px; align-items: start;">
@@ -777,13 +780,17 @@
                   </button>
                   <div class="json-action-separator"></div>
 
+                  <!-- View as Code Editor -->
+                  <button class="json-action-icon-btn active" id="json-btn-view-editor" onclick="JsonTool.switchTab('editor')" title="View raw text code editor">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                  </button>
                   <!-- View as Table -->
-                  <button class="json-action-icon-btn" id="json-btn-view-table" onclick="JsonTool.switchTab('table')" title="View as table">
+                  <button class="json-action-icon-btn" id="json-btn-view-table" onclick="JsonTool.switchTab('table')" title="View as interactive data table">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
                   </button>
-                  <!-- View as Tree -->
-                  <button class="json-action-icon-btn" id="json-btn-view-tree" onclick="JsonTool.switchTab('visualizer')" title="View as interactive tree">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                  <!-- View as Tree Visualizer -->
+                  <button class="json-action-icon-btn" id="json-btn-view-tree" onclick="JsonTool.switchTab('visualizer')" title="View as interactive tree visualizer">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="6" height="5" rx="1"/><rect x="15" y="3" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M6 8v8a2 2 0 0 0 2 2h7"/><path d="M6 13h9"/></svg>
                   </button>
                 </div>
 
@@ -922,7 +929,7 @@
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-dim)" stroke-width="2" style="margin-bottom: 4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                   <div style="font-size: 0.68rem; color: var(--text-muted); font-weight: 700;">Drag file here or click</div>
                 </div>
-                <input type="file" id="json-file-loader" style="display: none;" onchange="JsonTool.loadFile(this.files[0])">
+                <input type="file" id="json-file-loader" accept=".json,.jsonl,.txt" style="display: none;" onchange="JsonTool.loadFile(this.files[0])">
               </div>
 
               <!-- Settings -->
@@ -1520,7 +1527,7 @@
                   <label class="url-action-icon-btn" title="Load file">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     <span style="font-size: 0.72rem; font-weight: 700; margin-left: 4px;">Load</span>
-                    <input type="file" id="url-plain-file-input" style="display: none;">
+                    <input type="file" id="url-plain-file-input" accept=".txt,.url,.log" style="display: none;">
                   </label>
                   <button class="url-action-icon-btn" id="url-plain-copy" title="Copy">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
@@ -1595,62 +1602,190 @@
         </section>
 
         <!-- 10. UUID & Hash Generator -->
+        <!-- 10. UUID & Cryptographic Hash Generator -->
         <section id="view-uuid-hash" class="tool-view">
           <div class="tool-header">
             <div>
-              <h1 class="tool-title">UUID & Hash Generator</h1>
-              <p class="tool-subtitle">Generate UUIDs (v4, v7 timestamp-ordered), NanoID, MD5, SHA-1, SHA-256, SHA-512,
-                Keccak, and File Checksums.</p>
+              <h1 class="tool-title">UUID, Hash & Checksum Studio</h1>
+              <p class="tool-subtitle">Generate UUIDs (v4, v7 timestamp-ordered), NanoID, ULID, multi-algorithm hashes, and verify file checksums with real-time comparison.</p>
             </div>
           </div>
-          <div class="tool-panel">
-            <div class="tool-tabs-container">
-              <div class="tabs-nav">
-                <button class="tab-btn active" data-hash-tab="uuids">UUIDs & IDs</button>
-                <button class="tab-btn" data-hash-tab="hashes">Cryptographic Hashes</button>
-                <button class="tab-btn" data-hash-tab="filehash">File Checksum</button>
-              </div>
-              <div id="tab-uuids" class="hash-tab-content active">
-                <div class="form-row-inline">
-                  <select id="uuid-type" class="select-box">
-                    <option value="v4">UUID v4 (Random)</option>
-                    <option value="v7">UUID v7 (Time-Ordered)</option>
-                    <option value="nanoid">NanoID (21 chars)</option>
-                  </select>
-                  <input type="number" id="uuid-count" class="input-text" value="5" min="1" max="100"
-                    style="width: 80px;">
-                  <button class="btn btn-primary" id="uuid-gen-btn">Generate</button>
-                  <button class="btn btn-secondary" id="uuid-copy-btn">Copy All</button>
+
+          <div class="tool-panel" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+            <div class="tool-grid-2col" style="display: grid; grid-template-columns: 1fr 280px; gap: 20px; align-items: start;">
+              
+              <!-- Left Workspace -->
+              <div class="url-card" style="padding: 20px; display: flex; flex-direction: column; gap: 16px; min-width: 0;">
+                
+                <!-- Modern Sub-navigation Tabs -->
+                <div class="tabs-nav" style="margin-bottom: 0;">
+                  <button type="button" class="tab-btn active" data-hash-tab="uuids">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+                    UUIDs & Unique IDs
+                  </button>
+                  <button type="button" class="tab-btn" data-hash-tab="hashes">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    Cryptographic Hashes
+                  </button>
+                  <button type="button" class="tab-btn" data-hash-tab="filehash">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    File Checksum & Verifier
+                  </button>
                 </div>
-                <div id="uuid-output-list" style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px; max-height: 240px; overflow-y: auto; padding: 2px;">
-                  <!-- Individual copy list rendered dynamically by JS -->
-                </div>
-              </div>
-              <div id="tab-hashes" class="hash-tab-content">
-                <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
-                  <label>Input Text</label>
-                  <div style="display: flex; gap: 8px; align-items: center; width: 100%;">
-                    <input type="text" id="hash-input" class="input-text flex-1" placeholder="Type text to hash in real-time...">
-                    <label class="url-action-icon-btn" title="Load file payload" style="cursor: pointer; height: 32px; box-sizing: border-box; align-items: center;">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                      <input type="file" id="hash-file-load-input" style="display: none;">
-                    </label>
+
+                <!-- Tab 1: UUIDs & Unique IDs -->
+                <div id="tab-uuids" class="hash-tab-content active">
+                  <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <!-- Controls Bar -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; background: var(--bg-pane); padding: 12px; border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; flex: 1;">
+                        <select id="uuid-type" class="select-box" style="min-width: 170px;">
+                          <option value="v4">UUID v4 (Random Crypto)</option>
+                          <option value="v7">UUID v7 (Time-Ordered 2026)</option>
+                          <option value="nanoid">NanoID (21 chars URL-Safe)</option>
+                          <option value="ulid">ULID (Sortable Crockford)</option>
+                          <option value="cuid2">CUID2 (Collision Resistant)</option>
+                        </select>
+                        <div style="display: flex; align-items: center; gap: 4px;">
+                          <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-dim);">Qty:</span>
+                          <input type="number" id="uuid-count" class="input-text" value="5" min="1" max="100" style="width: 65px; padding: 6px 8px; text-align: center;">
+                        </div>
+                        <label class="pwd-switch-label" style="gap: 6px; font-size: 0.75rem;">
+                          <input type="checkbox" id="uuid-opt-uppercase" style="accent-color: var(--c-purple);">
+                          <span>Uppercase</span>
+                        </label>
+                        <label class="pwd-switch-label" style="gap: 6px; font-size: 0.75rem;">
+                          <input type="checkbox" id="uuid-opt-hyphens" checked style="accent-color: var(--c-purple);">
+                          <span>Hyphens</span>
+                        </label>
+                        <label class="pwd-switch-label" style="gap: 6px; font-size: 0.75rem;">
+                          <input type="checkbox" id="uuid-opt-braces" style="accent-color: var(--c-purple);">
+                          <span>Braces { }</span>
+                        </label>
+                      </div>
+                      <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn btn-primary" id="uuid-gen-btn" style="padding: 8px 18px; font-size: 0.82rem; font-weight: 700;">Generate</button>
+                        <button type="button" class="btn btn-secondary" id="uuid-copy-btn" style="padding: 8px 14px; font-size: 0.82rem;">Copy All</button>
+                      </div>
+                    </div>
+
+                    <!-- Output list of generated IDs -->
+                    <div id="uuid-output-list" style="display: flex; flex-direction: column; gap: 6px; min-height: 140px;">
+                      <!-- Populated by JS -->
+                    </div>
                   </div>
                 </div>
-                <div class="hash-results-list" id="hash-results-list"></div>
-              </div>
-              <div id="tab-filehash" class="hash-tab-content">
-                <div class="drop-zone" id="hash-file-dropzone">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  <p>Drop any file to compute live SHA-256 & MD5 checksums locally</p>
-                  <input type="file" id="hash-file-input" style="display: none;">
+
+                <!-- Tab 2: Cryptographic Hashes -->
+                <div id="tab-hashes" class="hash-tab-content">
+                  <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <!-- Input Text Area -->
+                    <div class="form-group" style="display: flex; flex-direction: column; gap: 6px;">
+                      <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <label style="font-weight: 700; font-size: 0.82rem; color: var(--text-main);">Input Text</label>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                          <span id="hash-input-stats" style="font-size: 0.72rem; color: var(--text-dim);">0 chars, 0 bytes</span>
+                          <button class="log-filter-btn" style="display: flex; align-items: center; gap: 4px; padding: 3px 8px; font-size: 0.7rem; cursor: pointer;" onclick="document.getElementById('hash-file-load-input').click()">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Load File
+                          </button>
+                          <input type="file" id="hash-file-load-input" accept=".txt,.json,.xml,.csv,.log,.md,.js,.ts,.html,.css,.yaml,.yml,.sql,.env,.ini" style="display: none;">
+                        </div>
+                      </div>
+                      <textarea id="hash-input" class="input-text" style="height: 80px; resize: vertical; font-family: var(--font-mono); font-size: 0.85rem;" placeholder="Type or paste text to compute hashes in real-time..."></textarea>
+                    </div>
+
+                    <!-- HMAC Secret Key & Format Controls -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; background: var(--bg-pane); padding: 10px 12px; border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                      <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 220px;">
+                        <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); white-space: nowrap;">HMAC Key (Optional):</span>
+                        <input type="text" id="hash-hmac-key" class="input-text" placeholder="Enter secret key for HMAC-SHA256..." style="padding: 4px 8px; font-size: 0.78rem; font-family: var(--font-mono);">
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Output:</span>
+                        <select id="hash-output-format" class="select-box" style="padding: 4px 8px; font-size: 0.75rem;">
+                          <option value="hex-lower">Hex (lowercase)</option>
+                          <option value="hex-upper">Hex (UPPERCASE)</option>
+                          <option value="base64">Base64</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <!-- Live Hash Results -->
+                    <div class="hash-results-list" id="hash-results-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+                  </div>
                 </div>
-                <div id="hash-file-results" style="margin-top:1rem;"></div>
+
+                <!-- Tab 3: File Checksum & Verifier -->
+                <div id="tab-filehash" class="hash-tab-content">
+                  <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <!-- Drop Zone -->
+                    <div class="drop-zone" id="hash-file-dropzone" style="padding: 2rem 1.5rem;">
+                      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      <p style="font-size: 0.85rem; font-weight: 600; margin-top: 6px;">Drop any file to compute SHA-256, SHA-512, MD5 & CRC-32 checksums locally</p>
+                      <span style="font-size: 0.72rem; color: var(--text-dim); margin-top: 2px;">100% Client-Side • Never uploaded to any server</span>
+                      <input type="file" id="hash-file-input" style="display: none;">
+                    </div>
+
+                    <!-- Checksum Match Verifier Section -->
+                    <div id="hash-verify-card" style="display: none; background: var(--bg-pane); border: 1.5px solid var(--border-color); border-radius: var(--radius-md); padding: 12px 14px;">
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-main);">Checksum Comparator</span>
+                        <span id="hash-match-status-badge" style="font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; background: var(--bg-card); color: var(--text-dim); border: 1px solid var(--border-color);">Awaiting Input</span>
+                      </div>
+                      <input type="text" id="hash-verify-input" class="input-text" placeholder="Paste expected hash / checksum to verify file integrity..." style="font-family: var(--font-mono); font-size: 0.8rem; width: 100%;">
+                    </div>
+
+                    <!-- Computed File Results -->
+                    <div id="hash-file-results" style="display: flex; flex-direction: column; gap: 6px;"></div>
+                  </div>
+                </div>
+
               </div>
+
+              <!-- Right Options & Quick Presets Sidebar -->
+              <div class="url-card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; font-weight: 800; font-size: 0.72rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                  <span>QUICK PRESETS</span>
+                  <button class="log-filter-btn" style="padding: 2px 8px; font-size: 0.68rem; color: var(--c-purple);" onclick="UuidHashTool.resetCurrentTab()">Reset</button>
+                </div>
+
+                <!-- UUID Quick Presets -->
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 0.68rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em;">Identifier Presets</span>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadUuidPreset('v4', 1, false, true)">1x UUID v4</button>
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadUuidPreset('v7', 5, false, true)">5x UUID v7</button>
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadUuidPreset('nanoid', 5, false, false)">5x NanoID</button>
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadUuidPreset('ulid', 5, true, false)">5x ULID</button>
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadUuidPreset('v4', 10, true, true)">10x UUID (UPPER)</button>
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadUuidPreset('cuid2', 5, false, false)">5x CUID2</button>
+                  </div>
+                </div>
+
+                <!-- Hash Quick Samples -->
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 0.68rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em;">Hash Test Payloads</span>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadHashSample('Hello, World!')">Hello World</button>
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadHashSample('password123')">password123</button>
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadHashSample('admin@example.com')">Email Address</button>
+                    <button type="button" class="pwd-preset-chip" onclick="UuidHashTool.loadHashSample('The quick brown fox jumps over the lazy dog')">Pangram Text</button>
+                  </div>
+                </div>
+
+                <!-- Info & Standards -->
+                <div style="display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--border-color); padding-top: 8px; font-size: 0.68rem; color: var(--text-dim); line-height: 1.35;">
+                  <div>• <strong>UUID v7</strong>: RFC 9562 timestamp-ordered</div>
+                  <div>• <strong>SHA-256/512</strong>: Hardware WebCrypto native</div>
+                  <div>• <strong>100% Offline</strong>: Zero telemetry, secure</div>
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
@@ -1677,7 +1812,7 @@
                     <button class="log-filter-btn" style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 0.72rem; cursor: pointer;" onclick="document.getElementById('case-file-loader').click()">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Load
                     </button>
-                    <input type="file" id="case-file-loader" style="display: none;" onchange="CaseTool.loadFile(this)">
+                    <input type="file" id="case-file-loader" accept=".txt,.text,.json,.js,.ts,.html,.css,.xml,.yml,.yaml,.csv,.md,.log,.sql,.env,.conf,.ini,.sh" style="display: none;" onchange="CaseTool.loadFile(this)">
                     <button class="url-action-icon-btn" id="case-fullscreen-btn" onclick="CaseTool.toggleFullscreen()" title="Fullscreen Input">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
                     </button>
@@ -1805,7 +1940,6 @@
               <p class="tool-subtitle">Live real-time regular expression tester with capture groups, visual highlighting, and common pattern presets.</p>
             </div>
             <div class="tool-actions">
-              <button class="btn btn-secondary" id="regex-sample-btn">Sample Email Pattern</button>
               <button class="btn btn-outline" id="regex-clear-btn">Clear All</button>
             </div>
           </div>
@@ -1965,12 +2099,12 @@
 
           <!-- Live Side-by-Side Comparison Workspace -->
           <div class="diff-sbs-container" id="diff-sbs-container">
-            <!-- Left Stream (Original) -->
+            <!-- Left Stream A -->
             <div class="diff-editor-card" id="diff-card-left">
               <div class="diff-editor-header">
                 <div class="diff-editor-title-wrap">
                   <span class="diff-stream-badge diff-badge-left">A</span>
-                  <span class="diff-editor-title">Stream A (Original)</span>
+                  <span class="diff-editor-title">Stream A</span>
                 </div>
                 <div class="diff-editor-actions">
                   <label class="url-action-icon-btn" title="Load local file into Stream A">
@@ -1992,17 +2126,17 @@
                 <div class="diff-gutter" id="diff-gutter-left"></div>
                 <div class="diff-code-stage">
                   <div class="diff-backdrop" id="diff-backdrop-left"></div>
-                  <textarea id="diff-text-left" class="diff-live-textarea" spellcheck="false" placeholder="Type or paste original text here..."></textarea>
+                  <textarea id="diff-text-left" class="diff-live-textarea" spellcheck="false" placeholder="Type or paste text A here..."></textarea>
                 </div>
               </div>
             </div>
 
-            <!-- Right Stream (Modified) -->
+            <!-- Right Stream B -->
             <div class="diff-editor-card" id="diff-card-right">
               <div class="diff-editor-header">
                 <div class="diff-editor-title-wrap">
                   <span class="diff-stream-badge diff-badge-right">B</span>
-                  <span class="diff-editor-title">Stream B (Modified)</span>
+                  <span class="diff-editor-title">Stream B</span>
                 </div>
                 <div class="diff-editor-actions">
                   <label class="url-action-icon-btn" title="Load local file into Stream B">
@@ -2024,7 +2158,7 @@
                 <div class="diff-gutter" id="diff-gutter-right"></div>
                 <div class="diff-code-stage">
                   <div class="diff-backdrop" id="diff-backdrop-right"></div>
-                  <textarea id="diff-text-right" class="diff-live-textarea" spellcheck="false" placeholder="Type or paste modified text here..."></textarea>
+                  <textarea id="diff-text-right" class="diff-live-textarea" spellcheck="false" placeholder="Type or paste text B here..."></textarea>
                 </div>
               </div>
             </div>
@@ -2116,14 +2250,46 @@
                 </div>
               </div>
 
-              <!-- Right Options Sidebar -->
-              <div class="url-card" style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
-                <div style="display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.72rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
-                  <span>OPTIONS</span>
+              <!-- Right Options Sidebar with Useful Presets -->
+              <div class="url-card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; font-weight: 800; font-size: 0.72rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                  <span>QUICK PRESETS</span>
+                  <button class="log-filter-btn" style="padding: 2px 8px; font-size: 0.68rem; color: var(--c-purple);" onclick="NumberBaseTool.clearAll()">Reset</button>
                 </div>
                 
-                <div>
-                  <button class="log-filter-btn" style="padding: 6px 12px; font-size: 0.72rem; width: 100%; color: var(--c-purple);" onclick="NumberBaseTool.clearAll()">Reset</button>
+                <!-- Common Integer Limits -->
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 0.68rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em;">Integer Limits</span>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('255', this)" title="8-Bit Max (0xFF)">255 (8-bit)</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('65535', this)" title="16-Bit Max (0xFFFF)">65,535 (16-bit)</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('2147483647', this)" title="Signed 32-Bit Max (0x7FFFFFFF)">Int32 Max</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('4294967295', this)" title="Unsigned 32-Bit Max (0xFFFFFFFF)">UInt32 Max</button>
+                  </div>
+                </div>
+
+                <!-- Memory & Powers of 2 -->
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 0.68rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em;">Memory / Powers of 2</span>
+                  <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px;">
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('256', this)" title="2^8 (0x100)">256 B</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('1024', this)" title="2^10 (0x400)">1 KB</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('65536', this)" title="2^16 (0x10000)">64 KB</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('1048576', this)" title="2^20 (0x100000)">1 MB</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('16777216', this)" title="2^24 (0x1000000)">16 MB</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('1073741824', this)" title="2^30 (0x40000000)">1 GB</button>
+                  </div>
+                </div>
+
+                <!-- Magic Hex Constants -->
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <span style="font-size: 0.68rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em;">Magic Constants</span>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('3735928559', this)" title="0xDEADBEEF">0xDEADBEEF</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('3405691582', this)" title="0xCAFEBABE">0xCAFEBABE</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('3132497677', this)" title="0xBAADF00D">0xBAADF00D</button>
+                    <button type="button" class="pwd-preset-chip" onclick="NumberBaseTool.loadPreset('3735929054', this)" title="0xDEADC0DE">0xDEADC0DE</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2135,217 +2301,323 @@
           <div class="tool-header">
             <div>
               <h1 class="tool-title">Color Converter & Palette Studio</h1>
-              <p class="tool-subtitle">Convert HEX, RGB, HSL, CMYK, check WCAG accessibility contrast, generate harmonies, and simulate colorblindness.</p>
+              <p class="tool-subtitle">Convert color formats, extract palettes from images via drag & drop, design gradients, and test WCAG contrast.</p>
             </div>
             <div class="tool-actions">
-              <button class="btn btn-secondary" id="col-random-top-btn">Random Color</button>
+              <button class="btn btn-secondary" id="col-eyedropper-btn" onclick="ColorTool.openEyedropper()" title="Pick color from screen">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l-3-3Z"/></svg>
+                Eyedropper
+              </button>
+              <button class="btn btn-secondary" id="col-random-top-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                Random Color
+              </button>
             </div>
           </div>
 
-          <!-- Top Swatch Preview & HSL Channel Sliders -->
-          <div class="url-card" style="padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-            <div style="position: relative; width: 64px; height: 64px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); flex-shrink: 0;" id="color-preview-box">
-              <input type="color" id="native-color-picker" value="#8b5cf6" style="position: absolute; top: -10px; left: -10px; width: 100px; height: 100px; cursor: pointer; opacity: 0;">
+          <!-- Color Studio Sub-navigation Tabs -->
+          <div class="color-studio-tabs" id="color-studio-tabs">
+            <button class="color-studio-tab-btn active" data-color-tab="converter" onclick="ColorTool.switchTab('converter')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/></svg>
+              Converter & Harmonies
+            </button>
+            <button class="color-studio-tab-btn" data-color-tab="extractor" onclick="ColorTool.switchTab('extractor')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              📸 Image Palette Extractor
+            </button>
+            <button class="color-studio-tab-btn" data-color-tab="gradient" onclick="ColorTool.switchTab('gradient')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/><path d="M12 2a10 10 0 0 1 10 10"/></svg>
+              🌈 Gradient Studio
+            </button>
+            <button class="color-studio-tab-btn" data-color-tab="contrast" onclick="ColorTool.switchTab('contrast')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20z"/></svg>
+              👁️ WCAG & Vision
+            </button>
+          </div>
+
+          <!-- TAB 1: CONVERTER & HARMONIES -->
+          <div id="col-tab-pane-converter" class="col-tab-pane">
+            <!-- Top Swatch Preview & HSL Channel Sliders -->
+            <div class="url-card" style="padding: 14px 16px; margin-bottom: 14px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+              <div style="position: relative; width: 68px; height: 68px; border-radius: var(--radius-md); overflow: hidden; border: 2px solid var(--border-color); box-shadow: var(--shadow-sm); flex-shrink: 0;" id="color-preview-box">
+                <input type="color" id="native-color-picker" value="#8b5cf6" style="position: absolute; top: -10px; left: -10px; width: 100px; height: 100px; cursor: pointer; opacity: 0;">
+              </div>
+              <div style="flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">
+                    <span>H (Hue)</span><span id="col-lbl-h">258°</span>
+                  </div>
+                  <input type="range" id="col-slider-h" min="0" max="360" value="258" class="slider-range" style="background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);">
+                </div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">
+                    <span>S (Saturation)</span><span id="col-lbl-s">90%</span>
+                  </div>
+                  <input type="range" id="col-slider-s" min="0" max="100" value="90" class="slider-range">
+                </div>
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">
+                    <span>L (Lightness)</span><span id="col-lbl-l">66%</span>
+                  </div>
+                  <input type="range" id="col-slider-l" min="0" max="100" value="66" class="slider-range">
+                </div>
+              </div>
             </div>
-            <div style="flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
-              <div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">
-                  <span>H (°)</span><span id="col-lbl-h">258</span>
+
+            <!-- Main Layout -->
+            <div style="display: grid; grid-template-columns: 1fr 280px; gap: 16px; align-items: start;">
+              <!-- Left Column: Formats & Harmonies -->
+              <div style="display: flex; flex-direction: column; gap: 14px;">
+                <!-- Formats Grid -->
+                <div class="url-card" style="padding: 14px 16px;">
+                  <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display: flex; align-items: center; gap: 6px;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                      Color Formats & Instant Exports
+                    </span>
+                    <span style="font-size: 0.7rem; color: var(--text-dim);">Click any code to copy</span>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px;">
+                    <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+                      <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">HEX</div>
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                        <input type="text" id="col-input-hex" class="input-text" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); padding: 0; width: 100%; border: none; background: transparent; font-family: var(--font-mono); outline: none;" value="#8b5cf6">
+                        <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-input-hex').value, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                      </div>
+                    </div>
+
+                    <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+                      <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">RGB</div>
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                        <input type="text" id="col-input-rgb" class="input-text" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); padding: 0; width: 100%; border: none; background: transparent; font-family: var(--font-mono); outline: none;" value="rgb(139, 92, 246)">
+                        <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-input-rgb').value, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                      </div>
+                    </div>
+
+                    <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+                      <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">RGBA</div>
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                        <input type="text" id="col-input-rgba" class="input-text" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); padding: 0; width: 100%; border: none; background: transparent; font-family: var(--font-mono); outline: none;" value="rgba(139, 92, 246, 1)">
+                        <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-input-rgba').value, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                      </div>
+                    </div>
+
+                    <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+                      <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">HSL</div>
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                        <input type="text" id="col-input-hsl" class="input-text" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); padding: 0; width: 100%; border: none; background: transparent; font-family: var(--font-mono); outline: none;" value="hsl(258, 90%, 66%)">
+                        <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-input-hsl').value, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                      </div>
+                    </div>
+
+                    <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+                      <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">HSV / HSB</div>
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                        <code id="col-fmt-hsv" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">hsv(258, 63%, 96%)</code>
+                        <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-fmt-hsv').innerText, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                      </div>
+                    </div>
+
+                    <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+                      <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">CMYK</div>
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                        <code id="col-fmt-cmyk" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">cmyk(43%, 63%, 0%, 4%)</code>
+                        <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-fmt-cmyk').innerText, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                      </div>
+                    </div>
+
+                    <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+                      <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">CSS Custom Property</div>
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                        <code id="col-fmt-cssvar" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">--color-primary: #8b5cf6;</code>
+                        <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-fmt-cssvar').innerText, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                      </div>
+                    </div>
+
+                    <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
+                      <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">Tailwind Class</div>
+                      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
+                        <code id="col-fmt-tw" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">bg-[#8b5cf6]</code>
+                        <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-fmt-tw').innerText, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <input type="range" id="col-slider-h" min="0" max="360" value="258" class="slider-range">
+
+                <!-- Harmonies Card -->
+                <div class="url-card" style="padding: 14px 16px;">
+                  <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 12px;">Color Harmonies (Click any swatch to apply)</div>
+                  <div style="display: flex; flex-direction: column; gap: 12px;" id="col-harmonies-container"></div>
+                </div>
+
+                <!-- Tints & Shades Scale -->
+                <div class="url-card" style="padding: 14px 16px;">
+                  <div style="font-size: 0.84rem; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">Tints & Shades (Lightness Progression)</div>
+                  <div style="display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; border-radius: var(--radius-md);" id="col-tints-strip"></div>
+                </div>
               </div>
-              <div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">
-                  <span>S (%)</span><span id="col-lbl-s">90%</span>
+
+              <!-- Right Column: Swatch History & Palette Presets -->
+              <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div class="url-card" style="padding: 14px 16px;">
+                  <div style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); margin-bottom: 8px;">SWATCH HISTORY</div>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;" id="col-swatch-history"></div>
+
+                  <div style="font-size: 0.78rem; font-weight: 800; color: var(--text-main); margin-top: 14px; margin-bottom: 8px;">CURATED PALETTES</div>
+                  <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;" id="col-preset-palette-grid"></div>
+
+                  <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 6px;">
+                    <button class="btn btn-secondary" id="col-action-random-btn" style="font-size: 0.76rem; width: 100%;">Random Color</button>
+                    <button class="btn-danger-outline" id="col-action-reset-btn" style="font-size: 0.76rem; width: 100%;">Reset Default</button>
+                  </div>
                 </div>
-                <input type="range" id="col-slider-s" min="0" max="100" value="90" class="slider-range">
-              </div>
-              <div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); margin-bottom: 2px;">
-                  <span>L (%)</span><span id="col-lbl-l">66%</span>
-                </div>
-                <input type="range" id="col-slider-l" min="0" max="100" value="66" class="slider-range">
               </div>
             </div>
           </div>
 
-          <div class="log-analyzer-layout">
-            <!-- Left Main Column -->
-            <div class="log-main-pane" style="display: flex; flex-direction: column; gap: 12px;">
-              <!-- Card 1: Color Formats & Code Exports -->
-              <div class="url-card" style="padding: 12px 14px;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-                  Color Formats & Code Exports
+          <!-- TAB 2: IMAGE PALETTE EXTRACTOR (DRAG & DROP WIZARD) -->
+          <div id="col-tab-pane-extractor" class="col-tab-pane" style="display: none;">
+            <div class="url-card" style="padding: 16px; margin-bottom: 16px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div>
+                  <h2 style="font-size: 1.05rem; font-weight: 800; color: var(--text-main);">📸 Image Color Palette Extractor</h2>
+                  <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 2px;">Drag & drop any photo or image to extract color swatches. Reorder swatches by dragging!</p>
                 </div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px;">
-                  <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                    <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">HEX</div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                      <input type="text" id="col-input-hex" class="input-text" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); padding: 0; width: 100%; border: none; background: transparent; font-family: var(--font-mono); outline: none;" value="#8b5cf6">
-                      <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-input-hex').value, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-                    </div>
+                <button class="btn btn-secondary" onclick="ColorTool.loadSampleImage()" style="font-size: 0.74rem;">Load Sample Image</button>
+              </div>
+
+              <!-- Drag & Drop Zone -->
+              <div class="color-image-dropzone" id="color-img-dropzone">
+                <input type="file" id="color-img-file-input" accept="image/*" style="display: none;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--c-purple)" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-main);">Drop an image here or click to browse</div>
+                <div style="font-size: 0.72rem; color: var(--text-dim);">PNG, JPG, WebP, SVG supported • Fast client-side quantization</div>
+              </div>
+
+              <!-- Interactive Image Preview & Loupe Area -->
+              <div id="color-img-preview-area" style="display: none; margin-top: 16px;">
+                <div style="display: grid; grid-template-columns: minmax(280px, 1fr) 300px; gap: 16px; align-items: start;">
+                  <div style="background: #000; border-radius: var(--radius-md); overflow: hidden; position: relative; border: 1px solid var(--border-color); max-height: 380px; display: flex; align-items: center; justify-content: center;">
+                    <canvas id="color-extractor-canvas" style="max-width: 100%; max-height: 380px; cursor: crosshair; display: block;"></canvas>
+                    <div id="color-pixel-loupe" style="display: none; position: absolute; width: 44px; height: 44px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.6); pointer-events: none; transform: translate(-50%, -50%); z-index: 5;"></div>
                   </div>
 
-                  <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                    <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">RGB</div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                      <input type="text" id="col-input-rgb" class="input-text" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); padding: 0; width: 100%; border: none; background: transparent; font-family: var(--font-mono); outline: none;" value="rgb(139, 92, 246)">
-                      <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-input-rgb').value, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                  <!-- Extracted Palette Section -->
+                  <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <span style="font-weight: 800; font-size: 0.84rem; color: var(--text-main);">Extracted Palette (<span id="col-extracted-count">6</span> Colors)</span>
+                      <span style="font-size: 0.7rem; color: var(--text-dim);">Drag to reorder</span>
                     </div>
-                  </div>
 
-                  <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                    <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">RGBA</div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                      <input type="text" id="col-input-rgba" class="input-text" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); padding: 0; width: 100%; border: none; background: transparent; font-family: var(--font-mono); outline: none;" value="rgba(139, 92, 246, 1)">
-                      <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-input-rgba').value, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-                    </div>
-                  </div>
+                    <!-- Draggable Extracted Swatches Grid -->
+                    <div id="color-extracted-palette-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;"></div>
 
-                  <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                    <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">HSL</div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                      <input type="text" id="col-input-hsl" class="input-text" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); padding: 0; width: 100%; border: none; background: transparent; font-family: var(--font-mono); outline: none;" value="hsl(258, 90%, 66%)">
-                      <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-input-hsl').value, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-                    </div>
-                  </div>
-
-                  <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                    <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">HSV / HSB</div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                      <code id="col-fmt-hsv" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">hsv(258, 63%, 96%)</code>
-                      <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-fmt-hsv').innerText, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-                    </div>
-                  </div>
-
-                  <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                    <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">CMYK</div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                      <code id="col-fmt-cmyk" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">cmyk(43%, 63%, 0%, 4%)</code>
-                      <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-fmt-cmyk').innerText, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-                    </div>
-                  </div>
-
-                  <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                    <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">CSS Var</div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                      <code id="col-fmt-cssvar" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">--color-primary: #8b5cf6;</code>
-                      <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-fmt-cssvar').innerText, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-                    </div>
-                  </div>
-
-                  <div class="hash-row" style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 10px;">
-                    <div style="font-size: 0.65rem; font-weight: 700; color: var(--text-dim);">Tailwind Class</div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px;">
-                      <code id="col-fmt-tw" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">bg-[#8b5cf6]</code>
-                      <button class="url-action-icon-btn" onclick="App.copyToClipboard(document.getElementById('col-fmt-tw').innerText, this)"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                    <!-- Export Buttons -->
+                    <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 10px;">
+                      <button class="btn btn-primary" onclick="ColorTool.exportPalette('css')" style="font-size: 0.78rem; padding: 7px;">Export as CSS Variables</button>
+                      <button class="btn btn-secondary" onclick="ColorTool.exportPalette('tailwind')" style="font-size: 0.78rem; padding: 7px;">Export for Tailwind Config</button>
+                      <button class="btn btn-secondary" onclick="ColorTool.exportPalette('json')" style="font-size: 0.78rem; padding: 7px;">Export Palette JSON</button>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <!-- Card 2: Color Harmonies -->
-              <div class="url-card" style="padding: 12px 14px;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">Color Harmonies</div>
-                <div style="display: flex; flex-direction: column; gap: 10px;" id="col-harmonies-container">
-                  <!-- JS injects Complementary, Analogous, Triadic, Split-Complementary palettes -->
+          <!-- TAB 3: GRADIENT STUDIO -->
+          <div id="col-tab-pane-gradient" class="col-tab-pane" style="display: none;">
+            <div class="url-card" style="padding: 16px;">
+              <div style="font-weight: 800; font-size: 1.05rem; color: var(--text-main); margin-bottom: 12px;">🌈 Interactive CSS Gradient Studio</div>
+
+              <!-- Gradient Visual Canvas Box -->
+              <div id="col-gradient-preview-canvas" style="height: 180px; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border-color); margin-bottom: 16px; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);"></div>
+
+              <!-- Gradient Type & Angle Controls -->
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; gap: 6px;">
+                  <button class="btn btn-primary btn-sm" id="grad-type-linear" onclick="ColorTool.setGradientType('linear')">Linear</button>
+                  <button class="btn btn-secondary btn-sm" id="grad-type-radial" onclick="ColorTool.setGradientType('radial')">Radial</button>
+                  <button class="btn btn-secondary btn-sm" id="grad-type-conic" onclick="ColorTool.setGradientType('conic')">Conic</button>
                 </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Angle:</span>
+                  <input type="range" id="grad-angle-slider" min="0" max="360" value="135" class="slider-range" style="width: 120px;" oninput="ColorTool.updateGradientAngle(this.value)">
+                  <span id="grad-angle-val" style="font-size: 0.76rem; font-weight: 800; color: var(--c-purple); width: 38px;">135°</span>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="ColorTool.randomizeGradient()">Random Gradient</button>
               </div>
 
-              <!-- Card 3: Tints & Shades (Lightness Scale) -->
-              <div class="url-card" style="padding: 12px 14px;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">Tints & Shades (Lightness Scale)</div>
-                <div style="display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; border-radius: var(--radius-md); overflow: hidden;" id="col-tints-strip">
-                  <!-- JS injects 8 tint/shade blocks -->
+              <!-- Color Stops List -->
+              <div style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-main);">Gradient Color Stops</span>
+                  <button class="btn btn-secondary btn-sm" onclick="ColorTool.addGradientStop()" style="font-size: 0.7rem; padding: 3px 8px;">+ Add Color Stop</button>
                 </div>
+                <div id="col-gradient-stops-list" style="display: flex; gap: 10px; flex-wrap: wrap;"></div>
               </div>
 
-              <!-- Card 4: WCAG Accessibility & Contrast Audit -->
-              <div class="url-card" style="padding: 12px 14px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
-                  <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main);">WCAG Accessibility & Contrast Audit</div>
-                  <button class="log-filter-btn" id="col-swap-contrast-btn" style="padding: 3px 8px; font-size: 0.72rem; display: flex; align-items: center; gap: 4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg>Swap Colors</button>
+              <!-- CSS Output Code Box -->
+              <div style="background: var(--bg-pane); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <code id="col-gradient-css-output" style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); font-family: var(--font-mono); word-break: break-all;">background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);</code>
+                <button class="btn btn-primary btn-sm" onclick="App.copyToClipboard(document.getElementById('col-gradient-css-output').innerText, this)" style="margin-left: 12px; flex-shrink: 0;">Copy CSS</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB 4: WCAG & VISION SIMULATION -->
+          <div id="col-tab-pane-contrast" class="col-tab-pane" style="display: none;">
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+              <!-- WCAG Audit Card -->
+              <div class="url-card" style="padding: 16px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                  <div style="font-size: 0.86rem; font-weight: 800; color: var(--text-main);">WCAG Accessibility Contrast Audit</div>
+                  <button class="log-filter-btn" id="col-swap-contrast-btn" style="padding: 4px 10px; font-size: 0.74rem; display: flex; align-items: center; gap: 6px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h12m0 0l-4-4m4 4l-4 4M16 17H4m0 0l4 4m-4-4l4-4"/></svg>Swap Foreground/Background</button>
                 </div>
 
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                  <div style="position: relative; width: 28px; height: 28px; border-radius: 4px; border: 1px solid var(--border-color); overflow: hidden;" id="col-bg-box">
-                    <input type="color" id="col-bg-picker" value="#ffffff" style="position: absolute; top: -10px; left: -10px; width: 60px; height: 60px; cursor: pointer; opacity: 0;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <div style="position: relative; width: 32px; height: 32px; border-radius: 4px; border: 1px solid var(--border-color); overflow: hidden;" id="col-bg-box">
+                      <input type="color" id="col-bg-picker" value="#ffffff" style="position: absolute; top: -10px; left: -10px; width: 60px; height: 60px; cursor: pointer; opacity: 0;">
+                    </div>
+                    <input type="text" id="col-bg-hex" class="input-text" style="width: 120px; font-size: 0.8rem; font-weight: 700;" value="#ffffff" placeholder="Background Hex">
                   </div>
-                  <input type="text" id="col-bg-hex" class="input-text" style="width: 120px; font-size: 0.78rem;" value="#ffffff" placeholder="Background Hex">
-                  <div id="col-contrast-ratio-badge" style="background: var(--c-purple); color: white; font-weight: 800; font-size: 0.76rem; padding: 4px 10px; border-radius: var(--radius-sm); margin-left: auto;">
+                  <div id="col-contrast-ratio-badge" style="background: var(--c-purple); color: white; font-weight: 800; font-size: 0.82rem; padding: 6px 14px; border-radius: var(--radius-sm); margin-left: auto;">
                     Contrast Ratio 4.23:1
                   </div>
                 </div>
 
                 <!-- Live Text Preview Box -->
-                <div id="col-contrast-sample-box" style="padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 10px; background: #ffffff; color: #8b5cf6;">
-                  <div style="font-weight: 800; font-size: 1.1rem; margin-bottom: 4px;">The quick brown fox jumps over the lazy dog</div>
-                  <div style="font-size: 0.78rem; opacity: 0.85;">Subtext sample paragraph demonstrating readability contrast against current background color.</div>
+                <div id="col-contrast-sample-box" style="padding: 18px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 14px; background: #ffffff; color: #8b5cf6;">
+                  <div style="font-weight: 800; font-size: 1.2rem; margin-bottom: 4px;">The quick brown fox jumps over the lazy dog</div>
+                  <div style="font-size: 0.84rem; opacity: 0.85;">Demonstrating readability contrast against current background color.</div>
                 </div>
 
-                <!-- WCAG Compliance Badges Grid -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 6px;">
-                  <div id="wcag-aa-normal" style="padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-pane); font-size: 0.72rem;">
+                <!-- WCAG Badges -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px;">
+                  <div id="wcag-aa-normal" style="padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-pane); font-size: 0.76rem;">
                     <div style="font-weight: 700;">AA Normal Text</div>
-                    <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">Req: 4.5:1 (<span class="status-val">PASS</span>)</div>
+                    <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Req: 4.5:1 (<span class="status-val">PASS</span>)</div>
                   </div>
-                  <div id="wcag-aa-large" style="padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-pane); font-size: 0.72rem;">
+                  <div id="wcag-aa-large" style="padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-pane); font-size: 0.76rem;">
                     <div style="font-weight: 700;">AA Large Text</div>
-                    <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">Req: 3:1 (<span class="status-val">PASS</span>)</div>
+                    <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Req: 3:1 (<span class="status-val">PASS</span>)</div>
                   </div>
-                  <div id="wcag-aaa-normal" style="padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-pane); font-size: 0.72rem;">
+                  <div id="wcag-aaa-normal" style="padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-pane); font-size: 0.76rem;">
                     <div style="font-weight: 700;">AAA Normal Text</div>
-                    <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">Req: 7:1 (<span class="status-val">FAIL</span>)</div>
+                    <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Req: 7:1 (<span class="status-val">FAIL</span>)</div>
                   </div>
-                  <div id="wcag-aaa-large" style="padding: 8px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-pane); font-size: 0.72rem;">
+                  <div id="wcag-aaa-large" style="padding: 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-pane); font-size: 0.76rem;">
                     <div style="font-weight: 700;">AAA Large Text</div>
-                    <div style="font-size: 0.65rem; color: var(--text-dim); margin-top: 2px;">Req: 4.5:1 (<span class="status-val">FAIL</span>)</div>
+                    <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;">Req: 4.5:1 (<span class="status-val">FAIL</span>)</div>
                   </div>
                 </div>
               </div>
 
-              <!-- Card 5: Colorblindness Vision Simulation -->
-              <div class="url-card" style="padding: 12px 14px;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-main); margin-bottom: 10px;">Colorblindness Vision Simulation</div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px;" id="col-vision-sim-grid">
-                  <!-- JS injects 4 vision simulation swatches -->
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Options Sidebar Column -->
-            <div class="log-side-column">
-              <div class="url-card" style="padding: 12px 14px; gap: 10px;">
-                <div class="url-card-header" style="margin-bottom: 4px; padding-bottom: 4px;">
-                  <svg class="ts-card-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                  <span class="url-card-title" style="font-size: 0.82rem;">OPTIONS</span>
-                </div>
-
-                <div class="ts-options-content" style="gap: 10px;">
-                  <!-- COLOR SWATCH HISTORY -->
-                  <div class="ts-option-section">
-                    <div class="ts-option-label" style="font-size: 0.72rem; margin-bottom: 6px;">COLOR SWATCH HISTORY</div>
-                    <div style="display: flex; gap: 4px; flex-wrap: wrap;" id="col-swatch-history">
-                      <!-- JS dynamically populates recent color swatches -->
-                    </div>
-                  </div>
-
-                  <!-- PRESETS PALETTE -->
-                  <div class="ts-option-section">
-                    <div class="ts-option-label" style="font-size: 0.72rem; margin-bottom: 6px;">PRESETS PALETTE</div>
-                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;" id="col-preset-palette-grid">
-                      <!-- JS dynamically injects preset color swatches -->
-                    </div>
-                  </div>
-
-                  <!-- ACTIONS -->
-                  <div class="ts-option-section">
-                    <div class="ts-option-label" style="font-size: 0.72rem; margin-bottom: 6px;">ACTIONS</div>
-                    <button class="btn btn-secondary btn-sm" id="col-action-random-btn" style="width: 100%; font-size: 0.72rem; padding: 6px; margin-bottom: 4px;">Random Color</button>
-                    <button class="btn-danger-outline" id="col-action-reset-btn" style="width: 100%; font-size: 0.72rem; padding: 4px; border-radius: var(--radius-sm);">Reset Default</button>
-                  </div>
-                </div>
+              <!-- Colorblindness Vision Simulation -->
+              <div class="url-card" style="padding: 16px;">
+                <div style="font-size: 0.86rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px;">Colorblindness Vision Simulation</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;" id="col-vision-sim-grid"></div>
               </div>
             </div>
           </div>
@@ -2435,23 +2707,100 @@
           <div class="tool-header">
             <div>
               <h1 class="tool-title">Secure Password Generator</h1>
-              <p class="tool-subtitle">Cryptographically secure random passwords and passphrases with NIST entropy analysis.</p>
+              <p class="tool-subtitle">Cryptographically secure random passwords with NIST entropy analysis.</p>
             </div>
           </div>
           
           <div class="pwd-layout">
-            <!-- Left Panel: Settings -->
+            <!-- Left Panel: Main Generator & 4 Sets Output -->
+            <div class="pwd-workspace-column">
+              <!-- Hero Generated Password Card -->
+              <div class="pwd-card pwd-hero-card">
+                <div class="pwd-card-header" style="justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px;">
+                  <span class="pwd-card-title">Generated Password</span>
+                  <span id="pwd-empty-badge" class="pwd-empty-tag">Ready</span>
+                </div>
+
+                <!-- Password Single-Line Output Box with Click-to-Copy -->
+                <div class="pwd-hero-box" id="pwd-hero-box" title="Click anywhere to copy" onclick="PasswordTool.copyMainPassword()">
+                  <div class="pwd-hero-text-wrapper" id="pwd-hero-display">
+                    <span class="pwd-placeholder-text">Click "Generate Password" below</span>
+                  </div>
+                  <input type="hidden" id="pwd-output">
+                  <button type="button" class="pwd-inline-copy-btn" id="pwd-inline-copy" title="Copy to clipboard">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                </div>
+
+                <!-- High-Impact Action Bar (Generate & Copy) -->
+                <div class="pwd-hero-actions">
+                  <button type="button" class="btn btn-primary pwd-prominent-gen-btn" id="pwd-generate-btn" onclick="PasswordTool.generate(true)">
+                    <svg id="pwd-refresh-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                    <span id="pwd-gen-btn-text">Generate Password</span>
+                  </button>
+                  <button type="button" class="btn btn-secondary pwd-prominent-copy-btn" id="pwd-copy-btn" onclick="PasswordTool.copyMainPassword()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    <span>Copy to Clipboard</span>
+                  </button>
+                </div>
+                
+                <!-- Strength & Crack Time Bar -->
+                <div class="pwd-strength-container" id="pwd-strength-container" style="display: none;">
+                  <div class="pwd-strength-bar">
+                    <div id="pwd-strength-fill" class="pwd-strength-fill"></div>
+                  </div>
+                  <div class="pwd-strength-labels">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <span style="font-size: 0.74rem; color: var(--text-dim);">Strength:</span>
+                      <span id="pwd-strength-text" class="pwd-strength-name">Strong</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                      <span id="pwd-crack-time" style="font-size: 0.74rem; color: var(--text-dim); font-weight: 600;">Crack time: ~Centuries</span>
+                      <span id="pwd-entropy-text" class="pwd-entropy-value">128 bits entropy</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4 Alternative Password Sets Card (Single line per row) -->
+              <div class="pwd-card" style="margin-top: 1.25rem;">
+                <div class="pwd-card-header" style="justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px;">
+                  <span class="pwd-card-title">Alternative Passwords (4 Sets)</span>
+                  <span style="font-size: 0.72rem; color: var(--text-dim);">1-click copy individual password</span>
+                </div>
+                <div class="pwd-single-line-list" id="pwd-suggestions-list">
+                  <!-- JS dynamically renders 4 single-line password rows -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Panel: Options & Settings Card -->
             <div class="pwd-settings-column">
+              <!-- Quick Presets -->
+              <div class="pwd-card" style="margin-bottom: 1.25rem; padding: 1.1rem 1.25rem;">
+                <div class="pwd-card-header" style="margin-bottom: 0.75rem; padding-bottom: 0.5rem;">
+                  <span class="pwd-card-title" style="font-size: 0.85rem;">Quick Presets</span>
+                </div>
+                <div class="pwd-presets-grid">
+                  <button type="button" class="pwd-preset-chip" onclick="PasswordTool.applyPreset(6, false, false, true, false, false)">PIN (6)</button>
+                  <button type="button" class="pwd-preset-chip active" onclick="PasswordTool.applyPreset(16, true, true, true, true, true)">Easy (16)</button>
+                  <button type="button" class="pwd-preset-chip" onclick="PasswordTool.applyPreset(24, true, true, true, true, true)">Strong (24)</button>
+                  <button type="button" class="pwd-preset-chip" onclick="PasswordTool.applyPreset(32, true, true, true, true, true)">Ultra (32)</button>
+                  <button type="button" class="pwd-preset-chip" onclick="PasswordTool.applyPreset(64, true, true, true, true, true)">Max (64)</button>
+                </div>
+              </div>
+
+              <!-- Options & Rules -->
               <div class="pwd-card">
                 <div class="pwd-card-header">
-                  <span class="pwd-card-title">Settings</span>
+                  <span class="pwd-card-title">Options & Rules</span>
                 </div>
                 <div class="pwd-settings-group">
                   <div class="pwd-length-row">
                     <span class="pwd-length-label">Length</span>
-                    <span class="pwd-length-badge" id="pwd-len-badge">64</span>
+                    <span class="pwd-length-badge" id="pwd-len-badge">16</span>
                   </div>
-                  <input type="range" id="pwd-len-slider" min="6" max="64" value="64" class="slider-range pwd-slider">
+                  <input type="range" id="pwd-len-slider" min="6" max="64" value="16" class="slider-range pwd-slider">
                   
                   <div class="pwd-toggles-list">
                     <label class="pwd-switch-label">
@@ -2483,7 +2832,7 @@
                         <input type="checkbox" id="pwd-opt-symbols" checked>
                         <span class="pwd-switch-slider"></span>
                       </div>
-                      <span class="pwd-switch-text">Symbols (!@#...)</span>
+                      <span class="pwd-switch-text">Symbols (!@#$%...)</span>
                     </label>
 
                     <label class="pwd-switch-label">
@@ -2494,38 +2843,6 @@
                       <span class="pwd-switch-text">Exclude ambiguous (lI1O0)</span>
                     </label>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Panel: Results & Suggestions -->
-            <div class="pwd-results-column">
-              <!-- Primary Password Output Card -->
-              <div class="pwd-card">
-                <div class="pwd-display-row">
-                  <input type="text" id="pwd-output" class="pwd-main-output" readonly placeholder="Click Generate to start">
-                  <button class="btn btn-primary" id="pwd-generate-btn">Generate</button>
-                  <button class="btn btn-secondary" id="pwd-copy-btn">Copy</button>
-                </div>
-                
-                <div class="pwd-strength-container">
-                  <div class="pwd-strength-bar">
-                    <div id="pwd-strength-fill" class="pwd-strength-fill"></div>
-                  </div>
-                  <div class="pwd-strength-labels">
-                    <span id="pwd-strength-text" class="pwd-strength-name">Strong</span>
-                    <span id="pwd-entropy-text" class="pwd-entropy-value">128 bits entropy</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Suggestions Card (4 alternative options) -->
-              <div class="pwd-card" style="margin-top: 1.5rem;">
-                <div class="pwd-card-header">
-                  <span class="pwd-card-title">Suggestions</span>
-                </div>
-                <div class="pwd-suggestions-list" id="pwd-suggestions-list">
-                  <!-- JS will dynamically populate 4 sets here -->
                 </div>
               </div>
             </div>
@@ -2540,13 +2857,12 @@
               <p class="tool-subtitle">Filter and deep-search DOCX, PDF, CSV, and text files (or an entire folder) for keywords, patterns, and stats.</p>
             </div>
             <div class="tool-actions">
-              <button class="btn btn-secondary" id="doc-sample-btn">Sample Docs</button>
-              <button class="btn btn-outline" id="doc-clear-btn-top">Clear All</button>
+              <button class="btn btn-outline" id="doc-clear-btn-top" style="display: none;">Clear All</button>
             </div>
           </div>
 
-          <!-- Keyword Search and Match mode header bar -->
-          <div class="url-card" style="padding: 14px 16px; margin-bottom: 12px;">
+          <!-- Keyword Search and Match mode header bar (Only shown when documents are loaded) -->
+          <div class="url-card" id="doc-keyword-search-card" style="padding: 14px 16px; margin-bottom: 12px; display: none;">
             <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
               <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-align: center;">Keywords <span style="font-weight: 400; opacity: 0.7;">— press Enter or comma to add</span></span>
               <div id="doc-keyword-chips-container" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; min-height: 44px; width: 100%; padding: 8px 12px; background: var(--bg-pane); border: 1.5px solid var(--border-color); border-radius: var(--radius-sm); cursor: text; transition: border-color 0.2s ease, box-shadow 0.2s ease;" onclick="document.getElementById('doc-keyword-input').focus()">
@@ -2718,58 +3034,25 @@
             <button class="sb-tab" data-pdf-tab="compress" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>Compress</button>
           </div>
 
-          <div class="log-analyzer-layout">
-            <!-- Left Main Work Pane -->
-            <div class="log-main-pane">
-              <!-- Main Dropzone -->
-              <div class="drop-zone" id="pdf-suite-dropzone" style="margin-bottom: 1rem; padding: 2.5rem 1.5rem; text-align: center;">
-                <div style="background: rgba(124, 58, 237, 0.1); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; color: var(--c-purple);">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                </div>
-                <div id="pdf-dropzone-title" style="font-weight: 700; font-size: 0.88rem; color: var(--text-main); margin-bottom: 4px;">Drag & drop two or more PDFs here, or click to browse</div>
-                <div id="pdf-dropzone-subtitle" style="font-size: 0.74rem; color: var(--text-dim);">They'll be merged in the order you add them — reorder before merging.</div>
-                <input type="file" id="pdf-suite-file-input" multiple accept=".pdf" style="display: none;">
+          <div class="pdf-suite-main-wrapper" style="max-width: 960px; margin: 0 auto; width: 100%;">
+            <!-- Main Dropzone -->
+            <div class="drop-zone" id="pdf-suite-dropzone" style="margin-bottom: 1rem; padding: 2.5rem 1.5rem; text-align: center;">
+              <div style="background: rgba(124, 58, 237, 0.1); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; color: var(--c-purple);">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               </div>
-
-              <!-- Tab Specific Controls (e.g. Split ranges / Compress ratio) -->
-              <div id="pdf-tab-extra-controls" style="display: none; margin-bottom: 1rem;" class="url-card">
-                <!-- JS dynamically injects split ranges input or compression quality toggles -->
-              </div>
-
-              <!-- Items List Grid -->
-              <div id="pdf-suite-items-list" style="display: flex; flex-direction: column; gap: 8px;">
-                <!-- JS dynamically renders loaded PDF/Image item cards here -->
-              </div>
+              <div id="pdf-dropzone-title" style="font-weight: 700; font-size: 0.88rem; color: var(--text-main); margin-bottom: 4px;">Drag & drop two or more PDFs here, or click to browse</div>
+              <div id="pdf-dropzone-subtitle" style="font-size: 0.74rem; color: var(--text-dim);">They'll be merged in the order you add them — reorder before merging.</div>
+              <input type="file" id="pdf-suite-file-input" multiple accept=".pdf" style="display: none;">
             </div>
 
-            <!-- Right Side Options Sidebar -->
-            <div class="log-side-column">
-              <div class="url-card" style="padding: 12px 14px; gap: 10px;">
-                <div class="url-card-header" style="margin-bottom: 4px; padding-bottom: 4px;">
-                  <svg class="ts-card-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-                  <span class="url-card-title" style="font-size: 0.82rem;">OPTIONS</span>
-                </div>
+            <!-- Tab Specific Controls (e.g. Split ranges / Compress ratio) -->
+            <div id="pdf-tab-extra-controls" style="display: none; margin-bottom: 1rem;" class="url-card">
+              <!-- JS dynamically injects split ranges input or compression quality toggles -->
+            </div>
 
-                <div class="ts-options-content" style="gap: 10px;">
-                  <!-- IMPORT section -->
-                  <div class="ts-option-section">
-                    <div class="ts-option-label" style="font-size: 0.72rem; margin-bottom: 6px;">IMPORT</div>
-                    <button class="btn btn-primary" id="pdf-sidebar-add-btn" style="width: 100%; font-size: 0.76rem; padding: 7px; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
-                      <span id="pdf-sidebar-add-lbl">Add PDFs</span>
-                    </button>
-                  </div>
-
-                  <!-- ACTIONS section -->
-                  <div class="ts-option-section">
-                    <div class="ts-option-label" style="font-size: 0.72rem; margin-bottom: 6px;">ACTIONS</div>
-                    <button class="btn btn-secondary" id="pdf-sidebar-action-btn" style="width: 100%; font-size: 0.76rem; padding: 7px; text-align: center; margin-bottom: 6px;" disabled>
-                      <span id="pdf-sidebar-action-lbl">Merge & Download</span>
-                    </button>
-                    <button class="btn-danger-outline" id="pdf-sidebar-clear-btn" style="width: 100%; font-size: 0.72rem; padding: 4px; border-radius: var(--radius-sm);">Clear</button>
-                  </div>
-                </div>
-              </div>
+            <!-- Items List Grid & Action Banners -->
+            <div id="pdf-suite-items-list" style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- JS dynamically renders loaded PDF/Image item cards and in-place action buttons here -->
             </div>
           </div>
         </section>
@@ -3086,32 +3369,61 @@
   </div>
 
 
+  <!-- Full-Page Blurred Backdrop PDF Progress Overlay -->
+  <div id="pdf-progress-overlay" class="pdf-progress-overlay">
+    <div class="pdf-progress-card">
+      <div class="pdf-progress-icon-ring">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--c-purple)" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <div class="pdf-spinner-ring"></div>
+      </div>
+      <h3 class="pdf-progress-title" id="pdf-progress-title">Generating Page Previews</h3>
+      <p class="pdf-progress-subtitle" id="pdf-progress-subtitle">Loading document...</p>
+      
+      <div class="pdf-progress-track">
+        <div class="pdf-progress-fill" id="pdf-progress-fill" style="width: 0%;"></div>
+      </div>
+      
+      <div class="pdf-progress-footer">
+        <span id="pdf-progress-status-text">Preparing pages...</span>
+        <span id="pdf-progress-percent" style="font-weight: 800; color: var(--c-purple);">0%</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
   <!-- Core Scripts -->
-  <script src="js/vendor/pdf-lib.min.js?v=2.0.1"></script>
-  <script src="js/tools/har.js?v=2.0.1"></script>
-  <script src="js/tools/json_tools.js?v=2.0.1"></script>
-  <script src="js/tools/log_analyzer.js?v=2.0.1"></script>
-  <script src="js/tools/doc_analyzer.js?v=2.0.1"></script>
-  <script src="js/tools/base64_converter.js?v=2.0.1"></script>
-  <script src="js/tools/file_base64.js?v=2.0.1"></script>
-  <script src="js/tools/base64_text.js?v=2.0.1"></script>
-  <script src="js/tools/url_tools.js?v=2.0.1"></script>
-  <script src="js/tools/jwt_decoder.js?v=2.0.1"></script>
-  <script src="js/tools/password_gen.js?v=2.0.1"></script>
-  <script src="js/tools/uuid_hash.js?v=2.0.1"></script>
-  <script src="js/tools/regex_tester.js?v=2.0.1"></script>
-  <script src="js/tools/text_diff.js?v=2.0.1"></script>
-  <script src="js/tools/case_text.js?v=2.0.1"></script>
-  <script src="js/tools/html_sandbox.js?v=2.0.1"></script>
-  <script src="js/tools/timestamp.js?v=2.0.1"></script>
-  <script src="js/tools/number_base.js?v=2.0.1"></script>
-  <script src="js/tools/color_converter.js?v=2.0.1"></script>
-  <script src="js/tools/cron_explainer.js?v=2.0.1"></script>
-  <script src="js/tools/pdf_tools.js?v=2.0.1"></script>
-  <script src="app.js?v=2.0.1"></script>
+  <script src="js/vendor/jszip.min.js?v=2.0.2"></script>
+  <script src="js/vendor/pdf.min.js?v=2.0.2"></script>
+  <script src="js/vendor/pdf-lib.min.js?v=2.0.2"></script>
+  <script src="js/tools/har.js?v=2.0.2"></script>
+  <script src="js/tools/json_tools.js?v=2.0.4"></script>
+  <script src="js/tools/log_analyzer.js?v=2.0.2"></script>
+  <script src="js/tools/doc_analyzer.js?v=2.0.4"></script>
+  <script src="js/tools/base64_converter.js?v=2.0.2"></script>
+  <script src="js/tools/file_base64.js?v=2.0.2"></script>
+  <script src="js/tools/base64_text.js?v=2.0.2"></script>
+  <script src="js/tools/url_tools.js?v=2.0.2"></script>
+  <script src="js/tools/jwt_decoder.js?v=2.0.2"></script>
+  <script src="js/tools/password_gen.js?v=2.0.6"></script>
+  <script src="js/tools/uuid_hash.js?v=2.0.3"></script>
+  <script src="js/tools/regex_tester.js?v=2.0.3"></script>
+  <script src="js/tools/text_diff.js?v=2.0.6"></script>
+  <script src="js/tools/case_text.js?v=2.0.3"></script>
+  <script src="js/tools/html_sandbox.js?v=2.0.2"></script>
+  <script src="js/tools/timestamp.js?v=2.0.2"></script>
+  <script src="js/tools/number_base.js?v=2.0.3"></script>
+  <script src="js/tools/color_converter.js?v=2.0.2"></script>
+  <script src="js/tools/cron_explainer.js?v=2.0.2"></script>
+  <script src="js/tools/pdf_tools.js?v=2.0.2"></script>
+  <script src="app.js?v=2.0.2"></script>
 </body>
 
 </html>
