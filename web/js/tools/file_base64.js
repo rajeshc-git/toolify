@@ -43,8 +43,16 @@ const FileBase64Tool = {
     this.currentFile = file;
     this.currentMimeType = file.type || 'application/octet-stream';
 
+    Perf.showProgressBar('file-b64-results', 0);
+
     const reader = new FileReader();
+    reader.onprogress = (e) => {
+      if (e.lengthComputable) {
+        Perf.showProgressBar('file-b64-results', Math.round((e.loaded / e.total) * 90));
+      }
+    };
     reader.onload = (e) => {
+      Perf.showProgressBar('file-b64-results', 95);
       const dataUri = e.target.result;
       const base64Index = dataUri.indexOf('base64,');
       if (base64Index !== -1) {
@@ -54,10 +62,16 @@ const FileBase64Tool = {
       }
 
       this.renderResults();
-      App.showToast(`Converted ${file.name} (${(file.size / 1024).toFixed(1)} KB) to Base64`);
+      Perf.hideProgressBar('file-b64-results');
+      App.showToast(`Converted ${file.name} (${Perf.formatBytes(file.size)}) to Base64`);
+    };
+    reader.onerror = () => {
+      Perf.hideProgressBar('file-b64-results');
+      App.showToast('Error reading file', 'error');
     };
     reader.readAsDataURL(file);
   },
+
 
   renderResults() {
     const prefixToggle = document.getElementById('file-b64-prefix-toggle');

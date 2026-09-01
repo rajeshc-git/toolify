@@ -35,7 +35,10 @@ const HarTool = {
 
     demoBtn.addEventListener('click', () => this.loadDemo());
     clearBtn.addEventListener('click', () => this.clear());
-    filterText.addEventListener('input', () => this.renderTable());
+
+    // Debounced filter (150ms)
+    const debouncedRenderTable = Perf.debounce(() => this.renderTable(), 150);
+    filterText.addEventListener('input', debouncedRenderTable);
     filterStatus.addEventListener('change', () => this.renderTable());
     filterMethod.addEventListener('change', () => this.renderTable());
     closeDetail.addEventListener('click', () => {
@@ -53,17 +56,25 @@ const HarTool = {
   },
 
   loadFile(file) {
+    Perf.showProgressBar('har-dropzone', 0, true);
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const json = JSON.parse(e.target.result);
+        Perf.hideProgressBar('har-dropzone');
         this.processHar(json);
       } catch (err) {
+        Perf.hideProgressBar('har-dropzone');
         App.showToast('Invalid HAR/JSON file: ' + err.message, 'error');
       }
     };
+    reader.onerror = () => {
+      Perf.hideProgressBar('har-dropzone');
+      App.showToast('Error reading file', 'error');
+    };
     reader.readAsText(file);
   },
+
 
   loadDemo() {
     const demoHar = {

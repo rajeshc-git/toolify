@@ -19,9 +19,12 @@ const UrlTool = {
 
     if (!plainText || !encodedText) return;
 
-    // Real-time bidirectional bindings
-    plainText.addEventListener('input', () => this.handlePlainInput());
-    encodedText.addEventListener('input', () => this.handleEncodedInput());
+    // Real-time bidirectional bindings with 150ms debounce
+    const debouncedPlain = Perf.debounce(() => this.handlePlainInput(), 150);
+    const debouncedEncoded = Perf.debounce(() => this.handleEncodedInput(), 150);
+
+    plainText.addEventListener('input', debouncedPlain);
+    encodedText.addEventListener('input', debouncedEncoded);
 
     // Toggle Modes
     if (modeCompBtn && modeFullBtn) {

@@ -143,13 +143,14 @@ and tabs\t\tare here.`
       });
     }
 
-    // Inputs listener
-    pattern.addEventListener('input', () => this.test());
+    // Debounced test handler (150ms)
+    const debouncedTest = Perf.debounce(() => this.test(), 150);
+    pattern.addEventListener('input', debouncedTest);
     flags.addEventListener('input', () => {
       this.syncFlagButtons();
-      this.test();
+      debouncedTest();
     });
-    sample.addEventListener('input', () => this.test());
+    sample.addEventListener('input', debouncedTest);
 
     // Start empty
     this.test();

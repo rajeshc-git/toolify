@@ -161,7 +161,55 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUIDelega
     
     let base64Payload = "{b64_html}"
 
+    func setupMainMenu() {{
+        let mainMenu = NSMenu()
+        
+        // 1. App Menu (About, Hide, Quit)
+        let appMenuItem = NSMenuItem()
+        mainMenu.addItem(appMenuItem)
+        let appMenu = NSMenu()
+        appMenuItem.submenu = appMenu
+        appMenu.addItem(withTitle: "About Toolify", action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
+        appMenu.addItem(NSMenuItem.separator())
+        appMenu.addItem(withTitle: "Hide Toolify", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        let hideOthers = NSMenuItem(title: "Hide Others", action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
+        hideOthers.keyEquivalentModifierMask = [.command, .option]
+        appMenu.addItem(hideOthers)
+        appMenu.addItem(withTitle: "Show All", action: #selector(NSApplication.unhideAllApplications(_:)), keyEquivalent: "")
+        appMenu.addItem(NSMenuItem.separator())
+        appMenu.addItem(withTitle: "Quit Toolify", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        
+        // 2. Edit Menu (Standard macOS Copy, Paste, Cut, Select All, Undo, Redo)
+        let editMenuItem = NSMenuItem()
+        mainMenu.addItem(editMenuItem)
+        let editMenu = NSMenu(title: "Edit")
+        editMenuItem.submenu = editMenu
+        
+        editMenu.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        let redoItem = NSMenuItem(title: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+        redoItem.keyEquivalentModifierMask = [.command, .shift]
+        editMenu.addItem(redoItem)
+        editMenu.addItem(NSMenuItem.separator())
+        editMenu.addItem(withTitle: "Cut", action: Selector(("cut:")), keyEquivalent: "x")
+        editMenu.addItem(withTitle: "Copy", action: Selector(("copy:")), keyEquivalent: "c")
+        editMenu.addItem(withTitle: "Paste", action: Selector(("paste:")), keyEquivalent: "v")
+        editMenu.addItem(withTitle: "Select All", action: Selector(("selectAll:")), keyEquivalent: "a")
+        
+        // 3. Window Menu
+        let windowMenuItem = NSMenuItem()
+        mainMenu.addItem(windowMenuItem)
+        let windowMenu = NSMenu(title: "Window")
+        windowMenuItem.submenu = windowMenu
+        windowMenu.addItem(withTitle: "Minimize", action: #selector(NSWindow.miniaturize(_:)), keyEquivalent: "m")
+        windowMenu.addItem(withTitle: "Zoom", action: #selector(NSWindow.performZoom(_:)), keyEquivalent: "")
+        windowMenu.addItem(withTitle: "Close Window", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
+        
+        NSApplication.shared.mainMenu = mainMenu
+    }}
+
     func applicationDidFinishLaunching(_ notification: Notification) {{
+        setupMainMenu()
+
         let fileManager = FileManager.default
         let cacheDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Toolify")
@@ -193,8 +241,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, WKUIDelega
 
         let config = WKWebViewConfiguration()
         config.preferences.setValue(true, forKey: "developerExtrasEnabled")
+        config.applicationNameForUserAgent = "ToolifyNativeApp"
         
         webView = WKWebView(frame: .zero, configuration: config)
+
         webView.uiDelegate = self
         webView.translatesAutoresizingMaskIntoConstraints = false
         
@@ -240,6 +290,7 @@ let delegate = AppDelegate()
 app.delegate = delegate
 app.run()
 """
+
 
 swift_file_path = os.path.join(mac_dir, "launcher.swift")
 with open(swift_file_path, "w", encoding="utf-8") as f:
@@ -289,7 +340,32 @@ create_dmg_cmd = [
     dmg_output,
     temp_src
 ]
-subprocess.check_call(create_dmg_cmd)
+
+try:
+    subprocess.check_call(create_dmg_cmd)
+except Exception as e:
+    print(f"Note: create-dmg AppleScript skipped/failed ({e}), falling back to native hdiutil...")
+    if not os.path.exists(os.path.join(temp_src, "Applications")):
+        try:
+            os.symlink("/Applications", os.path.join(temp_src, "Applications"))
+        except Exception:
+            pass
+    subprocess.check_call([
+        "hdiutil", "create",
+        "-volname", "Toolify",
+        "-srcfolder", temp_src,
+        "-ov",
+        "-format", "UDZO",
+        dmg_output
+    ])
+
+# Clean up any temporary rw.*.dmg files
+for f in os.listdir(mac_dir):
+    if f.startswith("rw.") and f.endswith(".dmg"):
+        try:
+            os.remove(os.path.join(mac_dir, f))
+        except Exception:
+            pass
 
 # Clean up temp source folder and intermediate app bundle
 shutil.rmtree(temp_src, ignore_errors=True)
@@ -301,3 +377,4 @@ shutil.copy(dmg_output, os.path.join(web_downloads_dir, "Toolify.dmg"))
 
 print("✓ Cleanup completed. macOS folder remains clean containing only build_dmg.py and Toolify.dmg!")
 print("✓ Beautiful styled macOS DMG installer compiled and copied to web downloads!")
+

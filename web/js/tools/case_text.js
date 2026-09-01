@@ -4,20 +4,33 @@ const CaseTool = {
     const input = document.getElementById('case-input');
     if (!input) return;
 
-    input.addEventListener('input', () => {
+    const debouncedUpdate = Perf.debounce(() => {
       this.syncLineNumbers();
       this.updateAllConversions();
-    });
+    }, 150);
+
+    input.addEventListener('input', debouncedUpdate);
 
     input.addEventListener('scroll', () => {
       const gutter = document.getElementById('case-line-gutter');
       if (gutter) gutter.scrollTop = input.scrollTop;
     });
 
+    // Escape key exits fullscreen
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const inputCard = document.getElementById('case-input-card');
+        if (inputCard && inputCard.classList.contains('fullscreen-active')) {
+          this.toggleFullscreen();
+        }
+      }
+    });
+
     // Start empty
     input.value = '';
     this.syncLineNumbers();
   },
+
 
   syncLineNumbers() {
     const input = document.getElementById('case-input');
@@ -60,14 +73,11 @@ const CaseTool = {
   },
 
   toggleFullscreen() {
-    const grid = document.getElementById('case-outer-grid');
-    const rightCol = document.getElementById('case-right-column');
-    const conversionsCard = document.getElementById('case-conversions-card');
     const inputCard = document.getElementById('case-input-card');
     const input = document.getElementById('case-input');
     const gutter = document.getElementById('case-line-gutter');
     const btn = document.getElementById('case-fullscreen-btn');
-    if (!grid || !rightCol || !conversionsCard || !inputCard || !input || !btn) return;
+    if (!inputCard || !btn) return;
 
     const isFull = inputCard.classList.contains('fullscreen-active');
 
@@ -75,25 +85,21 @@ const CaseTool = {
     const iconActive = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
 
     if (isFull) {
-      grid.style.gridTemplateColumns = '1fr 280px';
-      rightCol.style.display = 'flex';
-      conversionsCard.style.display = 'block';
       inputCard.classList.remove('fullscreen-active');
       btn.innerHTML = iconNormal;
       btn.title = "Fullscreen Input";
-      input.style.height = '160px';
+      if (input) input.style.height = '160px';
       if (gutter) gutter.style.height = '160px';
     } else {
-      grid.style.gridTemplateColumns = '1fr';
-      rightCol.style.display = 'none';
-      conversionsCard.style.display = 'none';
       inputCard.classList.add('fullscreen-active');
       btn.innerHTML = iconActive;
       btn.title = "Exit Fullscreen";
-      input.style.height = '420px';
-      if (gutter) gutter.style.height = '420px';
+      if (input) input.style.height = '';
+      if (gutter) gutter.style.height = '';
+      if (window.App && App.showToast) App.showToast('Input Maximized to Full Screen (Press Esc to Exit)');
     }
   },
+
 
   wordsFromStr(s) {
     if (!s) return [];

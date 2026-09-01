@@ -37,7 +37,8 @@ const JwtTool = {
       verifyBtn.addEventListener('click', () => this.verifySignature());
     }
 
-    input.addEventListener('input', () => this.decode());
+    const debouncedDecode = Perf.debounce(() => this.decode(), 150);
+    input.addEventListener('input', debouncedDecode);
     this.decode();
   },
 

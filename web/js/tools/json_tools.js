@@ -9,6 +9,8 @@ const JsonTool = {
   indentSpaces: 2,
   sortKeysEnabled: false,
   minifyEnabled: false,
+  _nodeCount: 0,
+  _maxNodes: 500,
 
   init() {
     const input = document.getElementById('json-input');
@@ -44,11 +46,12 @@ const JsonTool = {
       });
     }
 
-    // Input text field listeners
-    input.addEventListener('input', () => {
+    // Debounced input handler — 200ms to avoid re-parsing on every keystroke
+    const debouncedParse = Perf.debounce(() => {
       this.parseInputText();
       this.saveHistoryStateDelayed();
-    });
+    }, 200);
+    input.addEventListener('input', debouncedParse);
 
     // Start empty
     input.value = '';
@@ -100,7 +103,8 @@ const JsonTool = {
 
     const queryInput = document.getElementById('json-query-input');
     if (queryInput) {
-      queryInput.addEventListener('input', () => this.queryJsonPath());
+      const debouncedQuery = Perf.debounce(() => this.queryJsonPath(), 200);
+      queryInput.addEventListener('input', debouncedQuery);
     }
 
     const clearBtn = document.getElementById('json-clear-btn');
@@ -188,12 +192,18 @@ const JsonTool = {
       return;
     }
 
+    // Show spinner for large JSON
+    const isLarge = raw.length > 100 * 1024;
+    if (isLarge) Perf.showSpinner('json-tree-container', `Parsing ${Perf.formatBytes(raw.length)}…`);
+
     try {
       this.parsedData = JSON.parse(raw);
+      if (isLarge) Perf.hideSpinner('json-tree-container');
       this.renderTree();
       this.updateStats(raw.length);
       this.transform();
     } catch (err) {
+      if (isLarge) Perf.hideSpinner('json-tree-container');
       const container = document.getElementById('json-tree-container');
       if (container) {
         container.innerHTML = `<div style="color: var(--c-red); font-weight: 700; font-size: 0.82rem; padding: 10px;">Invalid JSON: ${err.message}</div>`;
@@ -210,12 +220,24 @@ const JsonTool = {
       return;
     }
 
+    // Reset node counter for virtualization
+    this._nodeCount = 0;
     container.innerHTML = '';
     const rootNode = this.createTreeNode(null, this.parsedData, 0, filterText, maxDepth, []);
     container.appendChild(rootNode);
   },
 
   createTreeNode(key, val, depth, filterText, maxDepth, path) {
+    // Virtualization: cap total rendered nodes to prevent DOM overload
+    this._nodeCount++;
+    if (this._nodeCount > this._maxNodes) {
+      const truncMsg = document.createElement('div');
+      truncMsg.style.cssText = 'padding:6px 18px; font-size:0.72rem; color:var(--text-dim); font-style:italic;';
+      truncMsg.textContent = `… ${this._nodeCount > this._maxNodes + 1 ? '' : '(tree capped at ' + this._maxNodes + ' nodes — use search or collapse branches)'}`;
+      if (this._nodeCount === this._maxNodes + 1) return truncMsg;
+      return document.createDocumentFragment();
+    }
+
     const container = document.createElement('div');
     container.className = 'json-node';
     container.style.paddingLeft = '18px';

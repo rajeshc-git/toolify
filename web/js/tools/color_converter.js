@@ -34,15 +34,15 @@ const ColorTool = {
       nativePicker.addEventListener('input', (e) => this.setColor(e.target.value));
     }
 
-    // HSL Sliders
+    // HSL Sliders (RAF throttled for smooth 60fps interaction)
     if (sliderH && sliderS && sliderL) {
-      const updateFromSliders = () => {
+      const updateFromSliders = Perf.throttleRAF(() => {
         const h = parseInt(sliderH.value);
         const s = parseInt(sliderS.value) / 100;
         const l = parseInt(sliderL.value) / 100;
         const hex = this.hslToHex(h, s, l);
         this.setColor(hex, false);
-      };
+      });
       sliderH.addEventListener('input', updateFromSliders);
       sliderS.addEventListener('input', updateFromSliders);
       sliderL.addEventListener('input', updateFromSliders);

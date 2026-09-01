@@ -1,3 +1,117 @@
+// Toolify Performance Utilities — debounce, throttle, progress, chunked processing
+const Perf = {
+  // Reusable debounce — returns a debounced version of fn
+  debounce(fn, ms = 150) {
+    let timer;
+    return function(...args) {
+      clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), ms);
+    };
+  },
+
+  // RAF-based throttle — fires at most once per animation frame
+  throttleRAF(fn) {
+    let rafId = null;
+    return function(...args) {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        fn.apply(this, args);
+        rafId = null;
+      });
+    };
+  },
+
+  // Show a slim progress bar inside a container element
+  showProgressBar(containerId, percent = 0, indeterminate = false) {
+    let bar = document.getElementById(`pb-${containerId}`);
+    if (!bar) {
+      bar = document.createElement('div');
+      bar.id = `pb-${containerId}`;
+      bar.className = 'toolify-progress-bar' + (indeterminate ? ' indeterminate' : '');
+      bar.innerHTML = '<div class="toolify-progress-fill" style="width:0%"></div>';
+      const container = document.getElementById(containerId);
+      if (container) container.prepend(bar);
+      else return;
+    }
+    bar.classList.remove('hidden');
+    bar.classList.toggle('indeterminate', indeterminate);
+    const fill = bar.querySelector('.toolify-progress-fill');
+    if (fill && !indeterminate) {
+      fill.style.width = Math.min(100, Math.max(0, percent)) + '%';
+      fill.classList.toggle('done', percent >= 100);
+    }
+  },
+
+  // Hide and remove progress bar with fade
+  hideProgressBar(containerId) {
+    const bar = document.getElementById(`pb-${containerId}`);
+    if (bar) {
+      const fill = bar.querySelector('.toolify-progress-fill');
+      if (fill) { fill.style.width = '100%'; fill.classList.add('done'); }
+      setTimeout(() => {
+        bar.classList.add('hidden');
+        setTimeout(() => bar.remove(), 300);
+      }, 400);
+    }
+  },
+
+  // Show a CSS spinner inside an element
+  showSpinner(elementId, label = '') {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const existing = el.querySelector('.toolify-spinner-wrap');
+    if (existing) existing.remove();
+    const wrap = document.createElement('div');
+    wrap.className = 'toolify-spinner-wrap';
+    wrap.innerHTML = `<span class="toolify-spinner"></span>${label ? `<span>${label}</span>` : ''}`;
+    el.prepend(wrap);
+  },
+
+  // Remove spinner from element
+  hideSpinner(elementId) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    const wrap = el.querySelector('.toolify-spinner-wrap');
+    if (wrap) wrap.remove();
+  },
+
+  // Process array in chunks to keep UI responsive
+  // Returns a Promise that resolves when all chunks are done
+  chunkedProcess(items, chunkSize, processFn, onProgress) {
+    return new Promise((resolve) => {
+      let idx = 0;
+      const total = items.length;
+      const results = [];
+      function processChunk() {
+        const end = Math.min(idx + chunkSize, total);
+        for (let i = idx; i < end; i++) {
+          results.push(processFn(items[i], i));
+        }
+        idx = end;
+        if (onProgress) onProgress(Math.round((idx / total) * 100), idx, total);
+        if (idx < total) {
+          setTimeout(processChunk, 0);
+        } else {
+          resolve(results);
+        }
+      }
+      if (total === 0) { resolve(results); return; }
+      processChunk();
+    });
+  },
+
+  // Format bytes to human readable string
+  formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+};
+
+window.Perf = Perf;
+
 // Toolify Main Application Coordinator & Router
 const App = {
   tools: [
@@ -24,6 +138,7 @@ const App = {
   ],
 
   init() {
+    this.checkStandaloneMode();
     try { this.setupTheme(); } catch(e) { console.error('Theme setup error:', e); }
     try { this.setupNavigation(); } catch(e) { console.error('Navigation setup error:', e); }
     try { this.setupCommandPalette(); } catch(e) { console.error('Command palette setup error:', e); }
@@ -36,6 +151,25 @@ const App = {
 
     console.log('%cToolify Initialized%c [20 tools loaded]', 'color:#7c3aed; font-weight:bold; font-size:14px;', 'color:#10b981;');
   },
+
+  checkStandaloneMode() {
+    // Only hide download buttons when inside true native desktop apps (Electron or Cocoa ToolifyNativeApp)
+    const isStandalone = navigator.userAgent.includes('Electron') ||
+                         navigator.userAgent.includes('ToolifyNativeApp') ||
+                         window.isToolifyNativeDesktopApp === true;
+
+    if (isStandalone) {
+      document.documentElement.classList.add('is-standalone-app');
+      const dlWrap = document.getElementById('topbar-downloads-wrap');
+      if (dlWrap) dlWrap.style.display = 'none';
+    } else {
+      document.documentElement.classList.remove('is-standalone-app');
+      const dlWrap = document.getElementById('topbar-downloads-wrap');
+      if (dlWrap) dlWrap.style.display = 'flex';
+    }
+  },
+
+
 
   initTools() {
     const toolInits = [
@@ -98,26 +232,40 @@ const App = {
   },
 
   setupTheme() {
-    const toggleBtn = document.getElementById('theme-toggle');
-    if (!toggleBtn) return;
+    const segButtons = document.querySelectorAll('.theme-seg-btn');
+    const savedTheme = localStorage.getItem('devutility_theme') || 'colorful';
+    
+    this.applyTheme(savedTheme, false);
 
-    const savedTheme = localStorage.getItem('devutility_theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    this.updateThemeText(savedTheme);
-
-    toggleBtn.addEventListener('click', () => {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('devutility_theme', next);
-      this.updateThemeText(next);
+    // Segmented Toggle in Topbar Header
+    segButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const theme = btn.dataset.setTheme;
+        if (theme) this.applyTheme(theme, true);
+      });
     });
   },
 
-  updateThemeText(theme) {
-    const textEl = document.querySelector('.theme-text');
-    if (textEl) textEl.innerText = theme === 'dark' ? 'Light mode' : 'Dark mode';
+  applyTheme(theme, showToast = false) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('devutility_theme', theme);
+
+    // Update Segmented Buttons Active State
+    document.querySelectorAll('.theme-seg-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.setTheme === theme);
+    });
+
+
+    if (showToast) {
+      const labels = {
+        light: '☀️ Light Mode activated',
+        colorful: '🎨 Colorful Mesh Sunset Mode activated',
+        dark: '🌙 Dark Mode activated'
+      };
+      this.showToast(labels[theme] || `Theme set to ${theme}`);
+    }
   },
+
 
   setupNavigation() {
     const sidebar = document.getElementById('sidebar');
@@ -187,10 +335,14 @@ const App = {
 
     if (!modal || !input) return;
 
-    const openModal = () => {
+    let selectedIndex = 0;
+    let currentFiltered = [];
+
+    const openModal = (initialQuery = '') => {
       modal.style.display = 'flex';
-      input.value = '';
-      this.renderModalResults('');
+      input.value = initialQuery;
+      selectedIndex = 0;
+      currentFiltered = this.renderModalResults(initialQuery, selectedIndex);
       input.focus();
     };
 
@@ -198,7 +350,14 @@ const App = {
       modal.style.display = 'none';
     };
 
-    if (sidebarSearchBtn) sidebarSearchBtn.addEventListener('click', openModal);
+    const selectAndOpen = (tool) => {
+      if (!tool) return;
+      window.location.hash = `#${tool.id}`;
+      closeModal();
+      this.showToast(`Opened ${tool.name}`);
+    };
+
+    if (sidebarSearchBtn) sidebarSearchBtn.addEventListener('click', () => openModal());
 
     window.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -209,25 +368,62 @@ const App = {
           closeModal();
         }
       }
-      if (e.key === 'Escape' && modal.style.display === 'flex') {
-        closeModal();
+      if (e.key === 'Escape') {
+        if (modal.style.display === 'flex') closeModal();
+        const dlModal = document.getElementById('download-app-modal');
+        if (dlModal && dlModal.style.display === 'flex') dlModal.style.display = 'none';
       }
     });
+
 
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
     });
 
     input.addEventListener('input', (e) => {
-      this.renderModalResults(e.target.value.trim());
+      selectedIndex = 0;
+      currentFiltered = this.renderModalResults(e.target.value.trim(), selectedIndex);
+    });
+
+    // Keyboard navigation: Enter to execute search/open, ArrowUp/ArrowDown to select
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (currentFiltered.length > 0) {
+          selectedIndex = (selectedIndex + 1) % currentFiltered.length;
+          this.updateSelectedModalItem(selectedIndex);
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentFiltered.length > 0) {
+          selectedIndex = (selectedIndex - 1 + currentFiltered.length) % currentFiltered.length;
+          this.updateSelectedModalItem(selectedIndex);
+        }
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (currentFiltered.length > 0) {
+          const tool = currentFiltered[selectedIndex] || currentFiltered[0];
+          selectAndOpen(tool);
+        }
+      }
     });
   },
 
-  renderModalResults(query) {
-    const resultsList = document.getElementById('modal-results-list');
-    if (!resultsList) return;
+  updateSelectedModalItem(index) {
+    const items = document.querySelectorAll('.modal-result-item');
+    items.forEach((item, idx) => {
+      item.classList.toggle('selected', idx === index);
+      if (idx === index) {
+        item.scrollIntoView({ block: 'nearest' });
+      }
+    });
+  },
 
-    const q = query.toLowerCase();
+  renderModalResults(query, selectedIndex = 0) {
+    const resultsList = document.getElementById('modal-results-list');
+    if (!resultsList) return [];
+
+    const q = (query || '').toLowerCase();
 
     const filtered = this.tools.filter(t => 
       !q || t.name.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q)
@@ -235,11 +431,11 @@ const App = {
 
     if (filtered.length === 0) {
       resultsList.innerHTML = '<div style="padding:1rem; text-align:center; color:var(--text-muted);">No matching tools found</div>';
-      return;
+      return [];
     }
 
     resultsList.innerHTML = filtered.map((tool, idx) => `
-      <div class="modal-result-item ${idx === 0 ? 'selected' : ''}" onclick="window.location.hash='#${tool.id}'; document.getElementById('search-modal').style.display='none';">
+      <div class="modal-result-item ${idx === selectedIndex ? 'selected' : ''}" data-tool-id="${tool.id}" onclick="window.location.hash='#${tool.id}'; document.getElementById('search-modal').style.display='none';">
         <div style="font-size:0.75rem; font-weight:700; color:var(--c-purple); width:80px;">${tool.cat}</div>
         <div style="flex:1;">
           <div style="font-weight:700; font-size:0.9rem;">${tool.name}</div>
@@ -248,24 +444,92 @@ const App = {
         <kbd style="font-size:0.72rem; color:var(--text-dim);">↵</kbd>
       </div>
     `).join('');
+
+    return filtered;
   },
 
   setupGlobalSearch() {
     const input = document.getElementById('global-search-input');
     if (!input) return;
 
-    input.addEventListener('focus', () => {
-      const modal = document.getElementById('search-modal');
+    const modal = document.getElementById('search-modal');
+    const modalInput = document.getElementById('modal-search-input');
+
+    const openWithQuery = (q = '') => {
       if (!modal) return;
       modal.style.display = 'flex';
-      const modalInput = document.getElementById('modal-search-input');
       if (modalInput) {
-        modalInput.value = '';
-        this.renderModalResults('');
+        modalInput.value = q;
+        this.renderModalResults(q);
         modalInput.focus();
+      }
+    };
+
+    input.addEventListener('focus', () => {
+      openWithQuery(input.value);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const q = input.value.trim().toLowerCase();
+        const match = this.tools.find(t => 
+          t.name.toLowerCase().includes(q) || t.cat.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q)
+        );
+        if (match) {
+          window.location.hash = `#${match.id}`;
+          this.showToast(`Opened ${match.name}`);
+        } else {
+          openWithQuery(input.value);
+        }
       }
     });
   },
+
+  openDownloadModal(platform = 'mac') {
+    const modal = document.getElementById('download-app-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    this.switchDownloadTab(platform);
+
+    modal.onclick = (e) => {
+      if (e.target === modal) this.closeDownloadModal();
+    };
+  },
+
+  closeDownloadModal() {
+    const modal = document.getElementById('download-app-modal');
+    if (modal) modal.style.display = 'none';
+  },
+
+  switchDownloadTab(platform) {
+    const tabMac = document.getElementById('download-tab-mac');
+    const tabWin = document.getElementById('download-tab-windows');
+    const panelMac = document.getElementById('download-panel-mac');
+    const panelWin = document.getElementById('download-panel-windows');
+
+    if (platform === 'mac') {
+      if (tabMac) tabMac.classList.add('active');
+      if (tabWin) tabWin.classList.remove('active');
+      if (panelMac) panelMac.style.display = 'flex';
+      if (panelWin) panelWin.style.display = 'none';
+    } else {
+      if (tabWin) tabWin.classList.add('active');
+      if (tabMac) tabMac.classList.remove('active');
+      if (panelWin) panelWin.style.display = 'flex';
+      if (panelMac) panelMac.style.display = 'none';
+    }
+  },
+
+  onDownloadTriggered(platform) {
+    if (platform === 'mac') {
+      this.showToast('🚀 Downloading Toolify.dmg for macOS...');
+    } else {
+      this.showToast('🚀 Downloading Toolify.exe for Windows...');
+    }
+  },
+
+
 
   copyToClipboard(text, triggerEl) {
     const btn = triggerEl || (window.event ? window.event.currentTarget || window.event.target : null);
@@ -280,6 +544,34 @@ const App = {
       if (btn) this.applyCopyFeedback(btn);
     };
 
+    const textLength = text ? text.length : 0;
+
+    // For very large strings (>5MB), offer download instead — clipboard APIs will fail
+    if (textLength > 5 * 1024 * 1024) {
+      this._downloadAsFile(text, 'toolify_output.txt');
+      this.showToast('Output too large for clipboard — downloaded as file instead');
+      if (btn) this.applyCopyFeedback(btn);
+      return;
+    }
+
+    // For large strings (>100KB), use Blob + ClipboardItem API to avoid DOM overhead
+    if (textLength > 100 * 1024 && navigator.clipboard && typeof ClipboardItem !== 'undefined') {
+      try {
+        const blob = new Blob([text], { type: 'text/plain' });
+        const item = new ClipboardItem({ 'text/plain': blob });
+        navigator.clipboard.write([item]).then(performCopy).catch(() => {
+          // Fallback to writeText
+          navigator.clipboard.writeText(text).then(performCopy).catch(() => {
+            this._fallbackCopy(text);
+            performCopy();
+          });
+        });
+        return;
+      } catch(e) {
+        // ClipboardItem not supported, fall through
+      }
+    }
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(performCopy).catch(() => {
         this._fallbackCopy(text);
@@ -290,6 +582,7 @@ const App = {
       if (btn) this.applyCopyFeedback(btn);
     }
   },
+
 
   applyCopyFeedback(btn) {
     if (!btn || btn.classList.contains('copy-feedback-active')) return;
@@ -328,15 +621,31 @@ const App = {
   },
 
   _fallbackCopy(text) {
+    // Cap textarea fallback at 500KB to prevent DOM freeze
+    const safeText = text && text.length > 512000 ? text.substring(0, 512000) : text;
     const ta = document.createElement('textarea');
-    ta.value = text;
+    ta.value = safeText;
     ta.style.position = 'fixed';
     ta.style.left = '-9999px';
     document.body.appendChild(ta);
     ta.select();
     try { document.execCommand('copy'); } catch(e) {}
     document.body.removeChild(ta);
+    if (text && text.length > 512000) {
+      this.showToast('Text was truncated for clipboard. Use download for full output.');
+    }
   },
+
+  _downloadAsFile(text, filename) {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename || 'toolify_output.txt';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 100);
+  },
+
 
   showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');

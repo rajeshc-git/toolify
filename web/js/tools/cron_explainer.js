@@ -6,9 +6,9 @@ const CronTool = {
     const input = document.getElementById('cron-input');
     if (!input) return;
 
-    input.addEventListener('input', () => {
+    input.addEventListener('input', Perf.debounce(() => {
       this.explain();
-    });
+    }, 150));
 
     // Start clean with no history auto-load
     this.history = [];

@@ -27,8 +27,9 @@ const LogTool = {
 
     if (!query) return;
 
-    // Search query events
-    query.addEventListener('input', () => this.filterLogs());
+    // Search query events with 150ms debounce
+    const debouncedFilter = Perf.debounce(() => this.filterLogs(), 150);
+    query.addEventListener('input', debouncedFilter);
 
     if (optRegex) {
       optRegex.addEventListener('change', (e) => {
@@ -310,13 +311,24 @@ const LogTool = {
       const matchId = `log-match-row-${this.matchIndices.length}`;
       this.matchIndices.push(idx);
 
+      // Capped DOM rendering to keep browser silky smooth on large logs
+      if (this.matchIndices.length <= 500) {
+        matchHtml.push(`
+          <div class="log-row log-${line.severity}" id="${matchId}">
+            <div class="log-row-gutter" title="${line.fileName}">${line.fileName.slice(0, 10)}:${line.lineNum}</div>
+            <div class="log-row-text">${displayHtml}</div>
+          </div>
+        `);
+      }
+    });
+
+    if (this.matchIndices.length > 500) {
       matchHtml.push(`
-        <div class="log-row log-${line.severity}" id="${matchId}">
-          <div class="log-row-gutter" title="${line.fileName}">${line.fileName.slice(0, 10)}:${line.lineNum}</div>
-          <div class="log-row-text">${displayHtml}</div>
+        <div style="padding: 10px; text-align: center; color: var(--text-dim); font-size: 0.72rem; font-style: italic; background: var(--bg-pane); border-top: 1px solid var(--border-color);">
+          Showing first 500 of ${this.matchIndices.length} matches. Refine your search query or click "Export / Copy" to get the full log output.
         </div>
       `);
-    });
+    }
 
     outView.innerHTML = matchHtml.length > 0 ? matchHtml.join('') : '<div style="padding:1.5rem; text-align:center; color:var(--text-muted);">No matching logs found</div>';
     this.updateStatsBadge(this.matchIndices.length, this.parsedLines.length);

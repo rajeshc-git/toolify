@@ -34,7 +34,9 @@ const UuidHashTool = {
       });
     }
 
-    hashInput.addEventListener('input', () => this.calculateHashes());
+    // Debounced hash calculation (150ms)
+    const debouncedCalc = Perf.debounce(() => this.calculateHashes(), 150);
+    hashInput.addEventListener('input', debouncedCalc);
 
     if (fileDrop) {
       fileDrop.addEventListener('click', () => fileInput.click());
@@ -69,34 +71,42 @@ const UuidHashTool = {
 
   async hashLocalFile(file) {
     const results = document.getElementById('hash-file-results');
-    results.innerHTML = `<p style="color:var(--c-purple);">Computing checksum for ${file.name} (${(file.size / 1024).toFixed(1)} KB)...</p>`;
+    Perf.showProgressBar('hash-file-dropzone', 0, true);
+    results.innerHTML = `<p style="color:var(--c-purple);">Computing checksum for ${file.name} (${Perf.formatBytes(file.size)})...</p>`;
     
-    const buffer = await file.arrayBuffer();
-    const sha256Buf = await crypto.subtle.digest('SHA-256', buffer);
-    const sha1Buf = await crypto.subtle.digest('SHA-1', buffer);
-    const toHex = (b) => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
+    try {
+      const buffer = await file.arrayBuffer();
+      const sha256Buf = await crypto.subtle.digest('SHA-256', buffer);
+      const sha1Buf = await crypto.subtle.digest('SHA-1', buffer);
+      const toHex = (b) => Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join('');
 
-    const sha256 = toHex(sha256Buf);
-    const sha1 = toHex(sha1Buf);
+      const sha256 = toHex(sha256Buf);
+      const sha1 = toHex(sha1Buf);
 
-    results.innerHTML = `
-      <div class="hash-row">
-        <span class="hash-algo">File</span>
-        <span class="hash-val"><strong>${App.escapeHtml(file.name)}</strong> (${(file.size/1024).toFixed(1)} KB)</span>
-      </div>
-      <div class="hash-row">
-        <span class="hash-algo">SHA-256</span>
-        <span class="hash-val">${sha256}</span>
-        <button class="url-action-icon-btn" onclick="App.copyToClipboard('${sha256}', this)" title="Copy SHA-256"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-      </div>
-      <div class="hash-row">
-        <span class="hash-algo">SHA-1</span>
-        <span class="hash-val">${sha1}</span>
-        <button class="url-action-icon-btn" onclick="App.copyToClipboard('${sha1}', this)" title="Copy SHA-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
-      </div>
-    `;
-    App.showToast(`Computed file checksum for ${file.name}`);
+      Perf.hideProgressBar('hash-file-dropzone');
+      results.innerHTML = `
+        <div class="hash-row">
+          <span class="hash-algo">File</span>
+          <span class="hash-val"><strong>${App.escapeHtml(file.name)}</strong> (${Perf.formatBytes(file.size)})</span>
+        </div>
+        <div class="hash-row">
+          <span class="hash-algo">SHA-256</span>
+          <span class="hash-val">${sha256}</span>
+          <button class="url-action-icon-btn" onclick="App.copyToClipboard('${sha256}', this)" title="Copy SHA-256"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+        </div>
+        <div class="hash-row">
+          <span class="hash-algo">SHA-1</span>
+          <span class="hash-val">${sha1}</span>
+          <button class="url-action-icon-btn" onclick="App.copyToClipboard('${sha1}', this)" title="Copy SHA-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+        </div>
+      `;
+      App.showToast(`Computed file checksum for ${file.name}`);
+    } catch(err) {
+      Perf.hideProgressBar('hash-file-dropzone');
+      results.innerHTML = `<p style="color:var(--c-red);">Error hashing file: ${err.message}</p>`;
+    }
   },
+
 
   generateUuids() {
     const type = document.getElementById('uuid-type').value;

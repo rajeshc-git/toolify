@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="colorful">
 
 <head>
   <meta charset="UTF-8">
@@ -210,30 +210,8 @@
           <span class="nav-label">HTML Editor & Live Preview</span>
         </a>
       </nav>
-
-      <!-- Sidebar Footer -->
-      <div class="sidebar-footer">
-        <button class="theme-toggle-btn" id="theme-toggle">
-          <svg class="sun-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
-            <circle cx="12" cy="12" r="5" />
-            <line x1="12" y1="1" x2="12" y2="3" />
-            <line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-            <line x1="1" y1="12" x2="3" y2="12" />
-            <line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-          </svg>
-          <svg class="moon-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-          <span class="theme-text">Dark mode</span>
-        </button>
-      </div>
     </aside>
+
 
     <!-- Main Content Area -->
     <main class="main-content" id="main-content">
@@ -272,20 +250,49 @@
         </div>
 
         <div class="topbar-right" style="display: flex; align-items: center; gap: 8px;">
-          <!-- macOS Download Button -->
-          <a href="downloads/Toolify.dmg" download class="icon-btn" title="Download macOS App (.dmg)" style="padding: 6px; border-radius: var(--radius-sm); color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; transition: var(--transition);">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M18.71,19.5 C17.88,20.74 17,21.95 15.66,21.97 C14.32,22 13.89,21.18 12.37,21.18 C10.84,21.18 10.37,21.95 9.1,22 C7.79,22.05 6.8,20.68 5.96,19.48 C4.25,17 2.94,12.45 4.7,9.39 C5.57,7.87 7.13,6.91 8.82,6.88 C10.1,6.86 11.32,7.75 12.11,7.75 C12.89,7.75 14.37,6.68 15.92,6.84 C16.57,6.87 18.39,7.1 19.56,8.82 C19.47,8.88 17.39,10.1 17.41,12.63 C17.44,15.65 20.06,16.66 20.1,16.67 C20.08,16.74 19.67,18.11 18.71,19.5 M15.97,4.17 C16.63,3.37 17.07,2.28 16.95,1 C16,1.04 14.9,1.6 14.24,2.38 C13.68,3.04 13.19,4.14 13.34,5.39 C14.39,5.47 15.4,4.88 15.97,4.17 Z"/>
-            </svg>
-          </a>
-          <!-- Windows Download Button -->
-          <a href="downloads/Toolify.exe" download class="icon-btn" title="Download Windows App (.exe)" style="padding: 6px; border-radius: var(--radius-sm); color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; transition: var(--transition);">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M0,3.449 L9.75,2.1 L9.75,11.25 L0,11.25 L0,3.449 Z M0,12.75 L9.75,12.75 L9.75,21.9 L0,20.55 L0,12.75 Z M11.25,1.901 L24,0 L24,11.25 L11.25,11.25 L11.25,1.901 Z M11.25,12.75 L24,12.75 L24,24 L11.25,22.099 L11.25,12.75 Z"/>
-            </svg>
-          </a>
+          <!-- 3-State Theme Toggle (Light ☀️ / Mesh Colorful 🎨 / Dark 🌙) -->
+          <div class="theme-segmented-toggle" id="theme-segmented-toggle">
+            <button class="theme-seg-btn" data-set-theme="light" title="Light Mode">
+              <svg class="sun-icon-inline" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            </button>
+            <button class="theme-seg-btn" data-set-theme="colorful" title="Colorful Mesh Sunset Mode">
+              <svg class="palette-icon-inline" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+              </svg>
+            </button>
+            <button class="theme-seg-btn" data-set-theme="dark" title="Dark Mode">
+              <svg class="moon-icon-inline" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Standalone Download Buttons (Shown only in Web version) -->
+          <div id="topbar-downloads-wrap" class="topbar-downloads-wrap" style="display: flex; align-items: center; gap: 6px;">
+            <!-- macOS Download Button (Opens Modal) -->
+            <button class="icon-btn topbar-download-btn" onclick="App.openDownloadModal('mac')" title="Download macOS App (.dmg)" style="padding: 6px; border-radius: var(--radius-sm); color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; transition: var(--transition);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.71,19.5 C17.88,20.74 17,21.95 15.66,21.97 C14.32,22 13.89,21.18 12.37,21.18 C10.84,21.18 10.37,21.95 9.1,22 C7.79,22.05 6.8,20.68 5.96,19.48 C4.25,17 2.94,12.45 4.7,9.39 C5.57,7.87 7.13,6.91 8.82,6.88 C10.1,6.86 11.32,7.75 12.11,7.75 C12.89,7.75 14.37,6.68 15.92,6.84 C16.57,6.87 18.39,7.1 19.56,8.82 C19.47,8.88 17.39,10.1 17.41,12.63 C17.44,15.65 20.06,16.66 20.1,16.67 C20.08,16.74 19.67,18.11 18.71,19.5 M15.97,4.17 C16.63,3.37 17.07,2.28 16.95,1 C16,1.04 14.9,1.6 14.24,2.38 C13.68,3.04 13.19,4.14 13.34,5.39 C14.39,5.47 15.4,4.88 15.97,4.17 Z"/>
+              </svg>
+            </button>
+            <!-- Windows Download Button (Opens Modal) -->
+            <button class="icon-btn topbar-download-btn" onclick="App.openDownloadModal('windows')" title="Download Windows App (.exe)" style="padding: 6px; border-radius: var(--radius-sm); color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; transition: var(--transition);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M0,3.449 L9.75,2.1 L9.75,11.25 L0,11.25 L0,3.449 Z M0,12.75 L9.75,12.75 L9.75,21.9 L0,20.55 L0,12.75 Z M11.25,1.901 L24,0 L24,11.25 L11.25,11.25 L11.25,1.901 Z M11.25,12.75 L24,12.75 L24,24 L11.25,22.099 L11.25,12.75 Z"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </header>
+
+
+
 
       <!-- View Containers -->
       <div class="content-body" id="content-body">
@@ -1804,9 +1811,11 @@
               <button class="btn btn-secondary" id="diff-swap-btn" title="Swap Streams">⇄ Swap</button>
               <button class="btn btn-secondary" id="diff-merge-l2r" title="Copy Left to Right">Merge L→R</button>
               <button class="btn btn-secondary" id="diff-merge-r2l" title="Copy Right to Left">Merge R→L</button>
+              <button class="btn btn-secondary" id="diff-fullscreen-main-btn" onclick="TextDiffTool.toggleFullscreen()" title="Toggle Fullscreen Comparison">⛶ Fullscreen</button>
               <button class="btn btn-secondary" id="diff-clear-btn">Clear</button>
             </div>
           </div>
+
 
           <!-- Beyond Compare Control Toolbar -->
           <div class="bc-toolbar">
@@ -1920,6 +1929,23 @@
               </div>
             </div>
           </div>
+
+          <!-- Beyond Compare Active Line Detail Comparison Pane -->
+          <div class="bc-line-detail-panel" id="diff-line-detail-panel" style="margin-top: 10px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 8px 12px; font-family: var(--font-mono); font-size: 12px; line-height: 1.6;">
+            <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 4px; display: flex; justify-content: space-between;">
+              <span>Beyond Compare Line Difference Inspector</span>
+              <span id="diff-detail-line-num">Cursor on Line 1</span>
+            </div>
+            <div id="diff-detail-row-left" style="display: flex; align-items: baseline; gap: 8px; overflow-x: auto; white-space: pre; padding: 2px 4px; border-radius: 4px; background: var(--bg-pane); margin-bottom: 2px;">
+              <span style="color: var(--text-dim); user-select: none; font-size: 11px;">A &gt;&gt;</span>
+              <span id="diff-detail-content-left" style="flex: 1;"></span>
+            </div>
+            <div id="diff-detail-row-right" style="display: flex; align-items: baseline; gap: 8px; overflow-x: auto; white-space: pre; padding: 2px 4px; border-radius: 4px; background: var(--bg-pane);">
+              <span style="color: var(--text-dim); user-select: none; font-size: 11px;">B &gt;&gt;</span>
+              <span id="diff-detail-content-right" style="flex: 1;"></span>
+            </div>
+          </div>
+
 
           <!-- Unified Patch View (Toggled when Unified mode active) -->
           <div class="bc-unified-card" id="diff-card-unified" style="display: none;">
@@ -2846,6 +2872,119 @@
       <div class="search-modal-results" id="modal-results-list"></div>
     </div>
   </div>
+
+  <!-- Download Standalone App Confirmation & Gatekeeper Instructions Modal -->
+  <div class="search-modal-backdrop" id="download-app-modal" style="display: none;">
+    <div class="search-modal-card download-modal-card">
+      <div class="download-modal-header">
+        <div class="download-modal-title-wrap">
+          <div class="brand-logo" style="width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+            </svg>
+          </div>
+          <div>
+            <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-main); margin: 0;">Download Toolify Standalone App</h3>
+            <p style="font-size: 0.76rem; color: var(--text-muted); margin: 0;">100% Offline • Zero Tracking • Ultra-Fast Performance</p>
+          </div>
+        </div>
+        <button class="icon-btn" onclick="App.closeDownloadModal()" title="Close (Esc)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Platform Selection Tabs -->
+      <div class="download-modal-tabs">
+        <button class="download-tab-btn active" id="download-tab-mac" onclick="App.switchDownloadTab('mac')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71,19.5 C17.88,20.74 17,21.95 15.66,21.97 C14.32,22 13.89,21.18 12.37,21.18 C10.84,21.18 10.37,21.95 9.1,22 C7.79,22.05 6.8,20.68 5.96,19.48 C4.25,17 2.94,12.45 4.7,9.39 C5.57,7.87 7.13,6.91 8.82,6.88 C10.1,6.86 11.32,7.75 12.11,7.75 C12.89,7.75 14.37,6.68 15.92,6.84 C16.57,6.87 18.39,7.1 19.56,8.82 C19.47,8.88 17.39,10.1 17.41,12.63 C17.44,15.65 20.06,16.66 20.1,16.67 C20.08,16.74 19.67,18.11 18.71,19.5 M15.97,4.17 C16.63,3.37 17.07,2.28 16.95,1 C16,1.04 14.9,1.6 14.24,2.38 C13.68,3.04 13.19,4.14 13.34,5.39 C14.39,5.47 15.4,4.88 15.97,4.17 Z"/>
+          </svg>
+          macOS (.dmg)
+        </button>
+        <button class="download-tab-btn" id="download-tab-windows" onclick="App.switchDownloadTab('windows')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M0,3.449 L9.75,2.1 L9.75,11.25 L0,11.25 L0,3.449 Z M0,12.75 L9.75,12.75 L9.75,21.9 L0,20.55 L0,12.75 Z M11.25,1.901 L24,0 L24,11.25 L11.25,11.25 L11.25,1.901 Z M11.25,12.75 L24,12.75 L24,24 L11.25,22.099 L11.25,12.75 Z"/>
+          </svg>
+          Windows (.exe)
+        </button>
+      </div>
+
+      <!-- macOS Content Panel -->
+      <div class="download-panel" id="download-panel-mac">
+        <div class="download-hero-card">
+          <div class="download-hero-info">
+            <span class="toolify-status-pill">Apple Silicon (M1/M2/M3/M4) & Intel • macOS 11+</span>
+            <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-main); margin-top: 4px;">Toolify for Mac</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Package size: <strong>583 KB</strong> • Native Swift + WebKit</div>
+          </div>
+          <a href="downloads/Toolify.dmg" download class="btn btn-primary download-primary-btn" onclick="App.onDownloadTriggered('mac')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Download Toolify.dmg
+          </a>
+        </div>
+
+        <div class="download-guide-box">
+          <div class="download-guide-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            macOS First-Launch Instructions (Apple Gatekeeper)
+          </div>
+          <ol class="download-steps-list">
+            <li>
+              <strong>1. Install:</strong> Double-click the downloaded <code>Toolify.dmg</code> and drag <strong>Toolify.app</strong> into your <strong>Applications</strong> folder.
+            </li>
+            <li>
+              <strong>2. Unsigned Notice:</strong> On first launch, macOS Gatekeeper may show: <em>"Toolify cannot be opened because Apple cannot check it for malicious software"</em>.
+            </li>
+            <li>
+              <strong>3. Allow Once:</strong> Open <strong>System Settings ➔ Privacy & Security</strong>, scroll down to the <strong>Security</strong> section, and click <strong>"Open Anyway"</strong>.
+              <div style="font-size: 0.74rem; color: var(--text-dim); margin-top: 3px;">Alternatively: Right-click <strong>Toolify.app</strong> in Applications ➔ hold Option and click <strong>Open</strong> ➔ click <strong>Open</strong>.</div>
+            </li>
+          </ol>
+          <div class="download-terminal-tip">
+            <span style="font-weight: 600;">Terminal Quick-Bypass:</span>
+            <code>xattr -cr /Applications/Toolify.app</code>
+            <button class="url-action-icon-btn" onclick="App.copyToClipboard('xattr -cr /Applications/Toolify.app', this)" title="Copy Command">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Windows Content Panel -->
+      <div class="download-panel" id="download-panel-windows" style="display: none;">
+        <div class="download-hero-card">
+          <div class="download-hero-info">
+            <span class="toolify-status-pill">Windows 10 / 11 (64-bit)</span>
+            <div style="font-weight: 800; font-size: 1.1rem; color: var(--text-main); margin-top: 4px;">Toolify for Windows</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Package size: <strong>71.6 MB</strong> • Single portable executable</div>
+          </div>
+          <a href="downloads/Toolify.exe" download class="btn btn-primary download-primary-btn" onclick="App.onDownloadTriggered('windows')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Download Toolify.exe
+          </a>
+        </div>
+
+        <div class="download-guide-box">
+          <div class="download-guide-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Windows First-Launch Instructions (Windows SmartScreen)
+          </div>
+          <ol class="download-steps-list">
+            <li>
+              <strong>1. Download:</strong> Click the button above to download <strong>Toolify.exe</strong>. Zero installer required — it runs portably anywhere on your PC.
+            </li>
+            <li>
+              <strong>2. SmartScreen Prompt:</strong> If Windows Defender SmartScreen displays <em>"Windows protected your PC"</em>:
+            </li>
+            <li>
+              <strong>3. Run:</strong> Click <strong>"More info"</strong> and then click <strong>"Run anyway"</strong> to launch immediately.
+            </li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>

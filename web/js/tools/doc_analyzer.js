@@ -293,7 +293,13 @@ tx_89126,usr_104,19.99,USD,FAILED,paypal`,
 
   async loadFiles(files) {
     let count = 0;
-    for (const file of Array.from(files)) {
+    const fileArr = Array.from(files);
+    const total = fileArr.length;
+    Perf.showProgressBar('doc-multi-dropzone', 0);
+
+    for (let idx = 0; idx < total; idx++) {
+      const file = fileArr[idx];
+      Perf.showProgressBar('doc-multi-dropzone', Math.round(((idx + 1) / total) * 90));
       const ext = file.name.split('.').pop().toLowerCase();
       let text = '';
 
@@ -327,9 +333,11 @@ tx_89126,usr_104,19.99,USD,FAILED,paypal`,
       }
     }
 
+    Perf.hideProgressBar('doc-multi-dropzone');
     this.searchDocs();
     App.showToast(`Loaded ${count} file(s) for keyword analysis`);
   },
+
 
   indexOfBytes(source, target, start) {
     for (let i = start; i < source.length - target.length; i++) {

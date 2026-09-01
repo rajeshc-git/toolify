@@ -54,10 +54,12 @@ const HtmlSandboxTool = {
       }
     });
 
-    textarea.addEventListener('scroll', () => {
+    const rafScrollSync = Perf.throttleRAF(() => {
       const numbersEl = document.getElementById('sb-line-numbers');
       if (numbersEl) numbersEl.scrollTop = textarea.scrollTop;
     });
+    textarea.addEventListener('scroll', rafScrollSync);
+
 
     // Auto-refresh configuration switch toggle
     const autoRefreshToggle = document.getElementById('sb-opt-autorefresh');

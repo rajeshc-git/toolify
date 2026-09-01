@@ -9,11 +9,12 @@ const NumberBaseTool = {
 
     if (!dec || !hex || !bin || !oct || !txt) return;
 
-    dec.addEventListener('input', () => this.fromDec(dec.value));
-    hex.addEventListener('input', () => this.fromHex(hex.value));
-    bin.addEventListener('input', () => this.fromBin(bin.value));
-    oct.addEventListener('input', () => this.fromOct(oct.value));
-    txt.addEventListener('input', () => this.fromText(txt.value));
+    dec.addEventListener('input', Perf.debounce(() => this.fromDec(dec.value), 100));
+    hex.addEventListener('input', Perf.debounce(() => this.fromHex(hex.value), 100));
+    bin.addEventListener('input', Perf.debounce(() => this.fromBin(bin.value), 100));
+    oct.addEventListener('input', Perf.debounce(() => this.fromOct(oct.value), 100));
+    txt.addEventListener('input', Perf.debounce(() => this.fromText(txt.value), 100));
+
 
     // Start empty
     this.clearAll();

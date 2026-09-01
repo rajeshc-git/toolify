@@ -425,6 +425,10 @@ const PdfTool = {
 
   async executeMerge() {
     if (this.loadedPdfs.length < 2) return;
+    const actionBtn = document.getElementById('pdf-sidebar-action-btn');
+    if (actionBtn) { actionBtn.classList.add('btn-loading'); actionBtn.disabled = true; }
+    Perf.showProgressBar('pdf-tab-content-area', 0);
+
     App.showToast('Merging PDF files...');
 
     try {
@@ -433,28 +437,39 @@ const PdfTool = {
       }
 
       const mergedPdf = await PDFLib.PDFDocument.create();
+      const total = this.loadedPdfs.length;
 
-      for (const file of this.loadedPdfs) {
+      for (let idx = 0; idx < total; idx++) {
+        const file = this.loadedPdfs[idx];
+        Perf.showProgressBar('pdf-tab-content-area', Math.round((idx / total) * 80));
         const fileBytes = new Uint8Array(await file.arrayBuffer());
         const pdf = await PDFLib.PDFDocument.load(fileBytes, { ignoreEncryption: true });
         const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
         copiedPages.forEach((page) => mergedPdf.addPage(page));
       }
 
+      Perf.showProgressBar('pdf-tab-content-area', 90);
       const mergedPdfBytes = await mergedPdf.save();
+      Perf.showProgressBar('pdf-tab-content-area', 100);
+
       const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
-      
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
       a.download = `Merged_Document_${Date.now()}.pdf`;
+      document.body.appendChild(a);
       a.click();
+      setTimeout(() => { URL.revokeObjectURL(a.href); document.body.removeChild(a); }, 200);
 
       App.showToast('Merged PDFs successfully!');
     } catch(err) {
       console.error(err);
       App.showToast('Error merging PDFs: ' + err.message, 'error');
+    } finally {
+      Perf.hideProgressBar('pdf-tab-content-area');
+      if (actionBtn) { actionBtn.classList.remove('btn-loading'); actionBtn.disabled = false; }
     }
   },
+
 
   async executeSplit() {
     if (!this.splitFile) return;
